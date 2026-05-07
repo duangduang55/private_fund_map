@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>私募基金管理人分布地图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0f; }
+#map { width: 100vw; height: 100vh; }
+
+/* ── 搜索框 ── */
+.search-box {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; width: 380px;
+}
+.search-box input {
+    width: 100%; padding: 12px 20px; font-size: 15px;
+    border: 2px solid rgba(0,212,170,0.3); border-radius: 25px; outline: none;
+    background: rgba(26,26,46,0.95); color: #e0e0e0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: #00d4aa; }
+.search-box input::placeholder { color: #6b7280; }
+.search-results {
+    position: absolute; top: 52px; left: 0; right: 0;
+    background: rgba(26,26,46,0.98); border-radius: 12px;
+    border: 1px solid rgba(0,212,170,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    max-height: 320px; overflow-y: auto; display: none;
+}
+.search-results.show { display: block; }
+.search-result-item {
+    padding: 10px 16px; cursor: pointer; border-bottom: 1px solid rgba(0,212,170,0.08);
+    font-size: 14px; color: #e0e0e0; display: flex; align-items: center; justify-content: space-between;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: rgba(0,212,170,0.1); }
+.search-result-item .aum-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; color: white; margin-left: 8px; flex-shrink: 0;
+}
+.search-result-item .visited-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; background: #6b7280; color: #fff; margin-left: 8px;
+}
+
+/* ── 图例 ── */
+.legend {
+    position: absolute; bottom: 30px; left: 20px;
+    background: rgba(26,26,46,0.95); padding: 16px 20px; border-radius: 12px;
+    border: 1px solid rgba(0,212,170,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 1000; min-width: 180px;
+}
+.legend-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.legend-title { font-size: 14px; color: #00d4aa; font-weight: 600; }
+.legend-toggle-group { display: flex; gap: 6px; }
+.legend-toggle-btn {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; cursor: pointer;
+    border: 1px solid rgba(0,212,170,0.3); background: transparent; color: #a0a0a0;
+    transition: all 0.2s;
+}
+.legend-toggle-btn.active {
+    background: rgba(0,212,170,0.2); border-color: #00d4aa; color: #00d4aa;
+}
+.legend-item {
+    display: flex; align-items: center; margin: 7px 0;
+    cursor: pointer; font-size: 13px; color: #c0c0c0;
+}
+.legend-item:hover { color: #fff; }
+.legend-item.disabled { opacity: 0.35; }
+.legend-color {
+    width: 16px; height: 16px; border-radius: 50%;
+    margin-right: 10px; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0;
+}
+.legend-count { margin-left: auto; font-size: 11px; color: #6b7280; padding-left: 8px; }
+.legend-empty { color: #6b7280; font-size: 12px; text-align: center; padding: 8px 0; }
+
+/* ── 统计 ── */
+.stats-box {
+    position: absolute; top: 20px; right: 20px;
+    background: rgba(26,26,46,0.95); padding: 14px 20px; border-radius: 12px;
+    border: 1px solid rgba(0,212,170,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 1000; font-size: 13px;
+    color: #c0c0c0;
+}
+.stats-box span { color: #00d4aa; font-weight: 600; }
+
+/* ── 弹窗 ── */
+.popup-content { min-width: 280px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.popup-content h3 {
+    font-size: 16px; margin-bottom: 10px; color: #1a1a2e;
+    border-bottom: 2px solid #00d4aa; padding-bottom: 8px;
+}
+.popup-content p { margin: 6px 0; font-size: 13px; color: #555; line-height: 1.5; }
+.popup-label { color: #888; display: inline-block; width: 72px; }
+.popup-aum {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 12px; color: white;
+}
+.popup-visit-info {
+    margin-top: 8px; padding: 8px 10px; background: #fff3cd; border-radius: 6px;
+    font-size: 12px; color: #856404; border: 1px solid #ffeeba;
+}
+.popup-actions { margin-top: 12px; display: flex; gap: 8px; }
+.popup-btn {
+    flex: 1; padding: 8px 12px; border: none; border-radius: 6px;
+    font-size: 13px; cursor: pointer; text-align: center;
+    transition: all 0.2s; text-decoration: none;
+}
+.popup-btn-primary { background: #00d4aa; color: white; }
+.popup-btn-primary:hover { background: #00b894; }
+.popup-btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+.popup-btn-secondary {
+    background: transparent; color: #00d4aa; border: 1px solid #00d4aa;
+}
+.popup-btn-secondary:hover { background: rgba(0,212,170,0.1); }
+
+/* ── 浮动购物车按钮 ── */
+.cart-float-btn {
+    position: absolute; bottom: 30px; right: 20px; z-index: 1000;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #00d4aa, #0ea5e9);
+    border: none; color: white; font-size: 22px; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,212,170,0.4);
+    transition: all 0.3s; display: flex; align-items: center; justify-content: center;
+}
+.cart-float-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,212,170,0.6); }
+.cart-float-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #ef4444; color: white; font-size: 11px; font-weight: 700;
+    min-width: 20px; height: 20px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* ── 侧滑面板（固定侧边栏，不遮挡地图交互） ── */
+body.cart-open #map { width: calc(100vw - 400px); }
+body.cart-open .stats-box { right: 420px; }
+body.cart-open .cart-float-btn { right: 420px; }
+
+.cart-panel {
+    position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+    background: rgba(26,26,46,0.98); z-index: 1001;
+    transition: right 0.3s ease; display: flex; flex-direction: column;
+    border-left: 1px solid rgba(0,212,170,0.2);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+}
+.cart-panel.open { right: 0; }
+.cart-panel-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid rgba(0,212,170,0.1);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.cart-panel-header h2 { font-size: 18px; color: #00d4aa; }
+.cart-close-btn {
+    background: none; border: none; color: #6b7280; font-size: 24px;
+    cursor: pointer; padding: 4px 8px; border-radius: 4px;
+}
+.cart-close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.cart-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.cart-item {
+    background: rgba(255,255,255,0.04); border-radius: 8px;
+    padding: 12px 14px; margin-bottom: 8px;
+    border: 1px solid rgba(0,212,170,0.08);
+}
+.cart-item-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+}
+.cart-item-name { font-size: 14px; color: #e0e0e0; font-weight: 600; margin-bottom: 4px; }
+.cart-item-detail { font-size: 12px; color: #9ca3af; margin: 2px 0; }
+.cart-item-remove {
+    background: none; border: none; color: #ef4444; cursor: pointer;
+    font-size: 12px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+}
+.cart-item-remove:hover { background: rgba(239,68,68,0.15); }
+.cart-empty {
+    text-align: center; padding: 40px 20px; color: #6b7280; font-size: 14px;
+}
+.cart-footer {
+    padding: 16px 24px 24px;
+    border-top: 1px solid rgba(0,212,170,0.1);
+}
+.cart-confirm-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #00d4aa, #0ea5e9); color: white;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.3s;
+}
+.cart-confirm-btn:hover { box-shadow: 0 4px 15px rgba(0,212,170,0.4); }
+.cart-confirm-btn:disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+.cart-count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #00d4aa; color: white; font-size: 11px; font-weight: 600;
+    width: 20px; height: 20px; border-radius: 50%; margin-left: 8px;
+}
+
+/* ── Toast 提示 ── */
+.toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    padding: 10px 24px; border-radius: 8px; font-size: 14px;
+    z-index: 3000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.toast.success { background: #065f46; color: #6ee7b7; border: 1px solid #059669; display: block; }
+.toast.error { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; display: block; }
+.toast.info { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; display: block; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<!-- 搜索框 -->
+<div class="search-box">
+    <input type="text" id="search-input" placeholder="🔍 搜索机构名称..." autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+</div>
+
+<!-- 图例 -->
+<div class="legend" id="legend">
+    <div class="legend-header">
+        <span class="legend-title">图例</span>
+        <div class="legend-toggle-group">
+            <button class="legend-toggle-btn active" data-mode="aum">管理规模</button>
+            <button class="legend-toggle-btn" data-mode="visited">拜访状态</button>
+        </div>
+    </div>
+    <div id="legend-items"></div>
+</div>
+
+<!-- 统计 -->
+<div class="stats-box" id="stats-box">
+    <div>显示: <span id="visible-count">0</span> / <span id="total-count">0</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px;">状态: <span id="visited-count">0</span></div>
+</div>
+
+<!-- 侧滑购物车面板 -->
+<button class="cart-float-btn" id="cart-float-btn" onclick="toggleCartPanel()" title="打开待拜访清单">
+    🛒<span class="cart-float-badge" id="cart-float-badge">0</span>
+</button>
+
+<div class="cart-panel" id="cart-panel">
+    <div class="cart-panel-header">
+        <h2>待拜访清单 <span class="cart-count-badge" id="cart-count">0</span></h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <a href="/plans?token={{ token }}" target="_blank" style="color:#6b7280;font-size:12px;text-decoration:none;padding:2px 8px;border-radius:4px;border:1px solid rgba(0,212,170,0.15);">📋 计划</a>
+            <button class="cart-close-btn" id="cart-close-btn">✕</button>
+        </div>
+    </div>
+    <div class="cart-list" id="cart-list">
+        <div class="cart-empty">清单为空，点击地图标记加入</div>
+    </div>
+    <div class="cart-footer">
+        <button class="cart-confirm-btn" id="cart-confirm-btn" disabled onclick="goToConfirm()">进入确认</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ── 配置 ──
+const API_BASE = window.location.origin;
+const TOKEN = '{{ token }}';
+const aumColors = {
+    '0-5亿元': '#4CAF50', '5-10亿元': '#8BC34A', '10-20亿元': '#FFC107',
+    '20-50亿元': '#FF9800', '50-100亿元': '#F44336', '100亿元以上': '#9C27B0',
+    '未披露': '#6b7280'
+};
+const aumOrder = ['0-5亿元', '5-10亿元', '10-20亿元', '20-50亿元', '50-100亿元', '100亿元以上', '未披露'];
+
+let fundData = [];           // 所有基金数据
+let completedSet = new Set(); // 已拜访（completed）reg_num 集合
+let pendingSet = new Set();   // 待拜访（only pending）reg_num 集合
+let visitedInfoCache = {};    // 已拜访详情缓存
+let markers = [];
+let markerMap = {};          // idx -> marker
+let legendMode = 'aum';      // 'aum' | 'visited'
+let currentHighlight = -1;
+let cartItems = [];
+let cartRegNums = new Set();
+
+// ── 初始化地图 ──
+const map = L.map('map', { zoomControl: true });
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    subdomains: '1234', attribution: '&copy; 高德地图'
+}).addTo(map);
+
+// ── 加载数据 ──
+async function loadMapData() {
+    const params = new URLSearchParams(window.location.search);
+    const resp = await fetch(`${API_BASE}/api/map-data?${params.toString()}`);
+    const result = await resp.json();
+    fundData = result.data;
+    completedSet = new Set(result.visited_reg_nums || []);
+    pendingSet = new Set(result.pending_reg_nums || []);
+    // 预加载所有已拜访的拜访信息
+    const visitedRegNums = result.visited_reg_nums || [];
+    await Promise.all(visitedRegNums.map(regNum =>
+        fetch(`${API_BASE}/api/visited-info?reg_num=${encodeURIComponent(regNum)}`)
+            .then(r => r.json())
+            .then(info => { visitedInfoCache[regNum] = info; })
+            .catch(() => {})
+    ));
+    renderMarkers();
+}
+
+async function loadCart() {
+    if (!TOKEN) return;
+    const resp = await fetch(`${API_BASE}/api/cart`, {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const result = await resp.json();
+    cartItems = result.data || [];
+    cartRegNums = new Set(cartItems.map(i => i.reg_num));
+    renderCart();
+}
+
+// ── 渲染标记 ──
+function renderMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    markerMap = {};
+
+    fundData.forEach((fund, idx) => {
+        const isCompleted = completedSet.has(fund.reg_num);
+        const isPending = pendingSet.has(fund.reg_num);
+        const baseColor = aumColors[fund.org_aum] || '#6b7280';
+        const size = 30;
+
+        let html;
+        if (isCompleted) {
+            // 已拜访：灰色圆形 + 白色勾 ✓
+            html = `<div style="width:${size}px;height:${size}px;background:#9CA3AF;
+                   border-radius:50%;border:2px solid #6B7280;
+                   box-shadow:0 3px 8px rgba(0,0,0,0.4);
+                   display:flex;align-items:center;justify-content:center;
+                   opacity:0.75;">
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                       <polyline points="4,13 10,19 20,5"/>
+                   </svg>
+                   </div>`;
+        } else if (isPending) {
+            // 待拜访：AUM颜色圆圈 + 沙漏图标 ⏳
+            html = `<div style="width:${size}px;height:${size}px;background:${baseColor};
+                   border-radius:50%;border:3px solid rgba(255,255,255,0.4);
+                   box-shadow:0 3px 8px rgba(0,0,0,0.4);
+                   display:flex;align-items:center;justify-content:center;">
+                   <span style="font-size:15px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">⏳</span>
+                   </div>`;
+        } else {
+            // 未拜访：纯AUM颜色圆圈
+            html = `<div style="width:${size}px;height:${size}px;background:${baseColor};
+                   border-radius:50%;border:3px solid rgba(255,255,255,0.4);
+                   box-shadow:0 3px 8px rgba(0,0,0,0.4);"></div>`;
+        }
+
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: html,
+            iconSize: [size, size],
+            iconAnchor: [size/2, size/2]
+        });
+
+        const marker = L.marker([fund.lat, fund.lng], { icon });
+        marker.fundIdx = idx;
+        marker.fundData = fund;
+        marker.isCompleted = isCompleted;
+        marker.isPending = isPending;
+
+        marker.bindTooltip(fund.org_name, {
+            direction: 'top', offset: [0, -size/2]
+        });
+
+        marker.on('click', () => onMarkerClick(marker));
+        markers.push(marker);
+        markerMap[idx] = marker;
+        marker.addTo(map);
+    });
+
+    // 更新图例和统计
+    updateLegend();
+    document.getElementById('total-count').textContent = fundData.length;
+    document.getElementById('visited-count').textContent = `${completedSet.size}已拜访 / ${pendingSet.size}待拜访`;
+    updateVisibleCount();
+
+    // 自动缩放
+    if (markers.length > 0) {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    } else {
+        map.setView([39.904, 116.408], 11);
+    }
+}
+
+// ── 标记点击 ──
+function onMarkerClick(marker) {
+    const fund = marker.fundData;
+    const isCompleted = marker.isCompleted;
+    const isPending = marker.isPending;
+    const color = aumColors[fund.org_aum] || '#6b7280';
+    const historyId = 'vh-' + (fund.reg_num || '').replace(/[^a-zA-Z0-9]/g, '');
+
+    let statusTag = '';
+    if (isCompleted) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#34d399;color:#fff;margin-left:8px;">✅ 已拜访</span>';
+    else if (isPending) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#FBBF24;color:#1a1a2e;margin-left:8px;">⏳ 待拜访</span>';
+    else statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#6b7280;color:#fff;margin-left:8px;">未拜访</span>';
+
+    let html = `<div class="popup-content">
+        <h3>${fund.org_name}${statusTag}</h3>
+        <p><span class="popup-label">管理规模</span> <span class="popup-aum" style="background:${color}">${fund.org_aum}</span></p>
+        <p><span class="popup-label">基金数量</span> ${fund.fund_count}</p>
+        <p><span class="popup-label">机构类型</span> ${fund.ins_type || '-'}</p>
+        <p><span class="popup-label">办公地址</span> ${fund.office_address || '-'}</p>`;
+
+    // 拜访记录占位（异步加载）
+    if (isCompleted || isPending) {
+        html += `<div class="popup-visit-info" id="${historyId}" style="padding:6px 10px;font-size:12px;">📋 加载拜访记录中...</div>`;
+    }
+
+    const inCart = cartRegNums.has(fund.reg_num);
+    html += `<div class="popup-actions">
+        <a class="popup-btn popup-btn-secondary" href="${fund.detail_url || '#'}" target="_blank">查看详情</a>
+        <button class="popup-btn popup-btn-primary" onclick="addToCart(${JSON.stringify(fund).replace(/"/g, '&quot;')})" ${inCart ? 'disabled' : ''}>
+            ${inCart ? '✓ 已在清单中' : (isCompleted ? '已拜访，仍加入清单' : '加入待拜访清单')}
+        </button>
+    </div></div>`;
+
+    marker.unbindPopup();
+    marker.bindPopup(html, { maxWidth: 360, className: '' });
+    marker.openPopup();
+
+    // 异步加载拜访历史
+    if (isCompleted || isPending) {
+        fetch(`${API_BASE}/api/visited-history?reg_num=${encodeURIComponent(fund.reg_num)}`)
+            .then(r => r.json())
+            .then(result => {
+                const records = result.data || [];
+                const el = document.getElementById(historyId);
+                if (!el) return;
+                if (records.length === 0) {
+                    el.innerHTML = isCompleted ? '✅ 此私募已被拜访过' : '⏳ 此私募在待拜访计划中';
+                    return;
+                }
+                el.style.maxHeight = '220px';
+                el.style.overflowY = 'auto';
+                el.innerHTML = records.map((r, i) => {
+                    const icon = r.status === 'completed' ? '✅' : '⏳';
+                    const resultText = r.visit_status ? ` | ${r.visit_status}` : '';
+                    const s = r.summary ? `<br><span style="color:#9ca3af;font-size:11px;">${r.summary}</span>` : '';
+                    return `<div style="padding:${i === 0 ? '0 0 5px' : '5px 0'};${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.1);' : ''}font-size:12px;color:#856404;line-height:1.5;">
+                        ${icon} <strong>${r.visitor_name || '-'}</strong> ${r.planned_date || ''}${resultText}${s}
+                    </div>`;
+                }).join('');
+            })
+            .catch(() => {
+                const el = document.getElementById(historyId);
+                if (el) el.innerHTML = isCompleted ? '✅ 此私募已被拜访过' : '⏳ 此私募在待拜访计划中';
+            });
+    }
+}
+
+// ── 加入购物车 ──
+async function addToCart(fund) {
+    if (!TOKEN) {
+        showToast('请先登录后操作', 'error');
+        return;
+    }
+    try {
+        const resp = await fetch(`${API_BASE}/api/cart/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify({
+                reg_num: fund.reg_num,
+                org_name: fund.org_name,
+                org_aum: fund.org_aum,
+                fund_count: fund.fund_count,
+                office_address: fund.office_address,
+                lat: fund.lat,
+                lng: fund.lng
+            })
+        });
+        const result = await resp.json();
+        if (result.success) {
+            showToast(`已加入待拜访清单：${fund.org_name}`, 'success');
+            await loadCart();
+            // 自动打开侧滑面板
+            document.getElementById('cart-panel').classList.add('open');
+            document.body.classList.add('cart-open');
+            setTimeout(() => map.invalidateSize(), 350);
+        } else {
+            showToast('添加失败，可能已在清单中', 'info');
+        }
+    } catch (e) {
+        showToast('操作失败：' + e.message, 'error');
+    }
+}
+
+// ── 渲染购物车 ──
+function renderCart() {
+    const list = document.getElementById('cart-list');
+    const count = document.getElementById('cart-count');
+    const badge = document.getElementById('cart-float-badge');
+    const btn = document.getElementById('cart-confirm-btn');
+
+    const cnt = cartItems.length;
+    count.textContent = cnt;
+    badge.textContent = cnt;
+    btn.disabled = cnt === 0;
+
+    if (cartItems.length === 0) {
+        list.innerHTML = '<div class="cart-empty">清单为空，点击地图标记加入</div>';
+        return;
+    }
+
+    list.innerHTML = cartItems.map(item => `
+        <div class="cart-item">
+            <div class="cart-item-header">
+                <div>
+                    <div class="cart-item-name">${item.org_name}</div>
+                    <div class="cart-item-detail">规模：${item.org_aum || '-'} | 基金数：${item.fund_count || '-'}</div>
+                    <div class="cart-item-detail">${item.office_address || ''}</div>
+                </div>
+                <button class="cart-item-remove" onclick="removeCartItem(${item.id})">删除</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function removeCartItem(id) {
+    const resp = await fetch(`${API_BASE}/api/cart/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const result = await resp.json();
+    if (result.success) {
+        await loadCart();
+        showToast('已从清单移除', 'info');
+    }
+}
+
+function toggleCartPanel() {
+    const panel = document.getElementById('cart-panel');
+    panel.classList.toggle('open');
+    document.body.classList.toggle('cart-open');
+    // 触发地图 resize，让瓦片重新铺满
+    setTimeout(() => map.invalidateSize(), 350);
+}
+
+// ── 图例 ──
+function updateLegend() {
+    const container = document.getElementById('legend-items');
+
+    if (legendMode === 'aum') {
+        // 按管理规模统计
+        const counts = {};
+        fundData.forEach(f => {
+            const aum = f.org_aum || '未披露';
+            counts[aum] = (counts[aum] || 0) + 1;
+        });
+        container.innerHTML = aumOrder.map(aum => {
+            const cnt = counts[aum] || 0;
+            return `<div class="legend-item" onclick="toggleAumVisibility('${aum}')">
+                <span class="legend-color" style="background:${aumColors[aum]||'#6b7280'}"></span>
+                <span>${aum}</span>
+                <span class="legend-count">${cnt}家</span>
+            </div>`;
+        }).join('');
+    } else {
+        // 按拜访状态统计（3种状态）
+        let completed = 0, pending = 0, unvisited = 0;
+        fundData.forEach(f => {
+            if (completedSet.has(f.reg_num)) completed++;
+            else if (pendingSet.has(f.reg_num)) pending++;
+            else unvisited++;
+        });
+        container.innerHTML = `
+            <div class="legend-item" onclick="toggleVisitedVisibility('completed')">
+                <span class="legend-color" style="background:#9CA3AF;border:2px solid #6B7280;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;">✓</span>
+                <span>已拜访</span>
+                <span class="legend-count">${completed}家</span>
+            </div>
+            <div class="legend-item" onclick="toggleVisitedVisibility('pending')">
+                <span class="legend-color" style="background:none;border:3px solid #FBBF24;"></span>
+                <span>待拜访</span>
+                <span class="legend-count">${pending}家</span>
+            </div>
+            <div class="legend-item" onclick="toggleVisitedVisibility('unvisited')">
+                <span class="legend-color" style="background:#4CAF50"></span>
+                <span>未拜访</span>
+                <span class="legend-count">${unvisited}家</span>
+            </div>
+        `;
+    }
+}
+
+// ── 图例切换 ──
+document.querySelectorAll('.legend-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.legend-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        legendMode = btn.dataset.mode;
+        // 重置所有可见性
+        markers.forEach(m => { m._hidden = false; });
+        updateLegend();
+        updateMarkers();
+    });
+});
+
+// ── 搜索 ──
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+let searchTimeout = null;
+
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(doSearch, 200);
+});
+
+function doSearch() {
+    const query = searchInput.value.trim().toLowerCase();
+    if (query.length === 0) {
+        searchResults.classList.remove('show');
+        clearHighlight();
+        return;
+    }
+
+    const matches = fundData.filter(f => f.org_name.toLowerCase().includes(query));
+    if (matches.length > 0) {
+        const getStatusTag = regNum => {
+            if (completedSet.has(regNum)) return '<span class="visited-tag" style="background:#34d399;">已拜访</span>';
+            if (pendingSet.has(regNum)) return '<span class="visited-tag" style="background:#FBBF24;color:#1a1a2e;">待拜访</span>';
+            return '';
+        };
+        searchResults.innerHTML = matches.slice(0, 15).map(m => {
+            const idx = fundData.indexOf(m);
+            return `<div class="search-result-item" data-idx="${idx}">
+                <span>${m.org_name}</span>
+                <span style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+                    ${getStatusTag(m.reg_num)}
+                    <span class="aum-tag" style="background:${aumColors[m.org_aum]||'#6b7280'}">${m.org_aum}</span>
+                </span>
+            </div>`;
+        }).join('');
+        searchResults.classList.add('show');
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const idx = parseInt(item.dataset.idx);
+                const fund = fundData[idx];
+                currentHighlight = idx;
+                map.setView([fund.lat, fund.lng], 14);
+                // 触发标记点击
+                const marker = markerMap[idx];
+                if (marker) marker.fire('click');
+                searchResults.classList.remove('show');
+                searchInput.value = fund.org_name;
+            });
+        });
+    } else {
+        searchResults.innerHTML = '<div class="search-result-item" style="color:#6b7280">未找到匹配机构</div>';
+        searchResults.classList.add('show');
+        clearHighlight();
+    }
+}
+
+function clearHighlight() {
+    currentHighlight = -1;
+}
+
+searchInput.addEventListener('blur', () => {
+    setTimeout(() => searchResults.classList.remove('show'), 200);
+});
+
+// ── Toast ──
+function showToast(msg, type = 'info') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type}`;
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+// ── 面板控制 ──
+document.getElementById('cart-close-btn').addEventListener('click', toggleCartPanel);
+
+function goToConfirm() {
+    if (!TOKEN) { showToast('请先登录', 'error'); return; }
+    const params = new URLSearchParams(window.location.search);
+    params.set('token', TOKEN);
+    window.open(`/confirm?${params.toString()}`, '_blank');
+}
+
+// ── 辅助函数（从图例调用） ──
+function toggleAumVisibility(aum) {
+    // 在按 AUM 模式下，隐藏/显示指定规模的标记
+    markers.forEach(m => {
+        if (m.fundData.org_aum === aum || (!m.fundData.org_aum && aum === '未披露')) {
+            m._hidden = !m._hidden;
+        }
+    });
+    updateMarkers();
+    // 视觉反馈
+    const items = document.querySelectorAll('.legend-item');
+    // 简化处理：重新渲染
+    updateLegend();
+    // 给该 aum 添加 disabled 类太复杂了，直接用简单方案
+    const legendContainer = document.getElementById('legend-items');
+    const allItems = legendContainer.querySelectorAll('.legend-item');
+    // 重新渲染后找回状态...
+    // 直接用更简单的 toggle: 重新计算哪些被隐藏了
+}
+
+function toggleVisitedVisibility(type) {
+    markers.forEach(m => {
+        const isCompleted = completedSet.has(m.fundData.reg_num);
+        const isPending = pendingSet.has(m.fundData.reg_num);
+        let match = false;
+        if (type === 'completed' && isCompleted) match = true;
+        else if (type === 'pending' && isPending) match = true;
+        else if (type === 'unvisited' && !isCompleted && !isPending) match = true;
+        if (match) m._hidden = !m._hidden;
+    });
+    updateMarkers();
+}
+
+function updateMarkers() {
+    let visible = 0;
+    markers.forEach(m => {
+        if (m._hidden) {
+            if (map.hasLayer(m)) map.removeLayer(m);
+        } else {
+            if (!map.hasLayer(m)) m.addTo(map);
+            visible++;
+        }
+    });
+    document.getElementById('visible-count').textContent = visible;
+}
+
+function updateVisibleCount() {
+    let visible = 0;
+    markers.forEach(m => {
+        if (map.hasLayer(m)) visible++;
+    });
+    document.getElementById('visible-count').textContent = visible;
+}
+
+// ── 初始化 ──
+loadMapData();
+loadCart();
+</script>
+</body>
+</html>

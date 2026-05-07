@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拜访反馈</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0a0a0f; color: #e0e0e0; min-height: 100vh;
+}
+.container { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
+.header {
+    text-align: center; margin-bottom: 2rem;
+}
+.header h1 {
+    font-size: 1.8rem; font-weight: 700; color: #00d4aa;
+    text-shadow: 0 0 20px rgba(0,212,170,0.3); margin-bottom: 0.3rem;
+}
+.header p { color: #6b7280; font-size: 0.9rem; }
+.plan-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+}
+.plan-card .name { font-size: 16px; font-weight: 600; color: #e0e0e0; margin-bottom: 4px; }
+.plan-card .detail { font-size: 13px; color: #9ca3af; }
+.form-section {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1rem;
+    display: none;
+}
+.form-section.visible { display: block; }
+.form-section h3 {
+    font-size: 0.8rem; color: #00d4aa; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid rgba(0,212,170,0.1);
+}
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+    display: block; font-size: 0.8rem; color: #6b7280; font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid rgba(0,212,170,0.2); background: rgba(255,255,255,0.05);
+    color: #e0e0e0; font-size: 14px; outline: none; font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #00d4aa;
+}
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group select option { background: #1a1a2e; color: #e0e0e0; }
+.checkbox-row {
+    display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.checkbox-row label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; color: #e0e0e0; cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+    width: 18px; height: 18px; accent-color: #00d4aa;
+}
+.tag-row {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.tag-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(0,212,170,0.25);
+    background: transparent; color: #9ca3af; font-size: 13px; cursor: pointer;
+    transition: all 0.2s;
+}
+.tag-btn.active {
+    background: rgba(0,212,170,0.15); border-color: #00d4aa; color: #00d4aa;
+}
+.btn-row { display: flex; gap: 1rem; margin-top: 1.5rem; }
+.btn {
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 600; cursor: pointer; text-align: center;
+    transition: all 0.3s;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00d4aa, #0ea5e9); color: white;
+    box-shadow: 0 4px 15px rgba(0,212,170,0.3);
+}
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(0,212,170,0.45); }
+.btn-primary:disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+.btn-secondary {
+    background: transparent; color: #00d4aa; border: 1px solid #00d4aa;
+}
+.btn-secondary:hover { background: rgba(0,212,170,0.1); }
+.success-msg {
+    text-align: center; padding: 3rem 1rem;
+}
+.success-msg .icon { font-size: 48px; margin-bottom: 1rem; }
+.success-msg h2 { color: #00d4aa; margin-bottom: 0.5rem; }
+.success-msg p { color: #9ca3af; margin-bottom: 1.5rem; }
+.loading { text-align: center; padding: 3rem; color: #6b7280; }
+.footer { text-align: center; color: #4b5563; font-size: 0.75rem; padding: 2rem 0; }
+.status-selector {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+}
+.status-selector h3 {
+    font-size: 0.8rem; color: #00d4aa; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;
+}
+.status-options {
+    display: flex; gap: 0.8rem; flex-wrap: wrap;
+}
+.status-opt {
+    flex: 1; min-width: 120px; padding: 14px; border-radius: 10px;
+    border: 2px solid rgba(0,212,170,0.15); background: transparent;
+    color: #9ca3af; font-size: 14px; font-weight: 600; cursor: pointer;
+    text-align: center; transition: all 0.2s;
+}
+.status-opt:hover { border-color: rgba(0,212,170,0.35); color: #e0e0e0; }
+.status-opt.selected-cancelled { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+.status-opt.selected-completed { border-color: #34d399; color: #34d399; background: rgba(52,211,153,0.1); }
+@media (max-width: 500px) {
+    .btn-row { flex-direction: column; }
+    .checkbox-row { flex-direction: column; gap: 0.5rem; }
+    .status-options { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="header">
+        <h1>拜访反馈</h1>
+        <p>填写拜访情况记录</p>
+    </div>
+    <div id="content">
+        <div class="loading"><p>加载中...</p></div>
+    </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const TOKEN = new URLSearchParams(location.search).get('token') || '';
+const PLAN_ID = parseInt(new URLSearchParams(location.search).get('plan_id')) || 0;
+const TAG_OPTIONS = ['合作意向', '不对外', '不合作', '需求高度匹配'];
+let selectedTags = new Set();
+let selectedAction = ''; // 'completed' | 'cancelled'
+let planData = null;
+
+async function loadPlan() {
+    if (!PLAN_ID) {
+        document.getElementById('content').innerHTML = '<div class="loading"><p>缺少计划ID</p></div>';
+        return;
+    }
+    try {
+        const resp = await fetch(`${API_BASE}/api/history`, {
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        const plans = (await resp.json()).data || [];
+        planData = plans.find(p => p.id === PLAN_ID);
+        if (!planData) {
+            document.getElementById('content').innerHTML = '<div class="loading"><p>未找到该拜访计划</p></div>';
+            return;
+        }
+        // 检查已有反馈
+        const fbResp = await fetch(`${API_BASE}/api/feedback/${PLAN_ID}`, {
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        const existing = await fbResp.json();
+        render(existing.id ? existing : null);
+    } catch (e) {
+        document.getElementById('content').innerHTML =
+            `<div class="loading"><p>加载失败：${e.message}</p></div>`;
+    }
+}
+
+function render(existing) {
+    const el = document.getElementById('content');
+    const fb = existing || {};
+    if (fb.id) selectedTags = new Set(fb.tags || []);
+
+    // 如果有已有反馈，自动选中对应的 action
+    if (existing) {
+        selectedAction = 'completed';
+    }
+
+    el.innerHTML = `
+    <div class="plan-card">
+        <div class="name">${planData.org_name}</div>
+        <div class="detail">${planData.reg_num} | 计划: ${planData.planned_date || '-'} | 拜访人: ${planData.visitor_name || '-'}</div>
+    </div>
+
+    <!-- 第1步：选择计划状态（始终显示） -->
+    <div class="status-selector" id="status-selector">
+        <h3>① 请选择操作</h3>
+        <div class="status-options">
+            <div class="status-opt ${selectedAction === 'completed' ? 'selected-completed' : ''}" id="opt-completed" onclick="selectAction('completed')">✅ 标记完成<br><span style="font-weight:400;font-size:12px;color:#6b7280;">拜访成功，填写详情</span></div>
+            <div class="status-opt ${selectedAction === 'cancelled' ? 'selected-cancelled' : ''}" id="opt-cancelled" onclick="selectAction('cancelled')">❌ 取消计划<br><span style="font-weight:400;font-size:12px;color:#6b7280;">无需拜访，填写原因</span></div>
+        </div>
+    </div>
+
+    <!-- 第2a步：取消原因表单 -->
+    <div class="form-section ${selectedAction === 'cancelled' ? 'visible' : ''}" id="section-cancelled">
+        <h3>取消说明</h3>
+        <div class="form-group">
+            <label>取消原因</label>
+            <textarea id="cancel-reason" placeholder="填写取消原因...">${fb.id && planData.status === 'cancelled' ? (planData.remark || '') : ''}</textarea>
+        </div>
+    </div>
+
+    <!-- 第2b步：完成反馈表单 -->
+    <div class="form-section ${selectedAction === 'completed' ? 'visible' : ''}" id="section-completed">
+        <h3>② 拜访结果</h3>
+        <div class="form-group">
+            <label>拜访状态</label>
+            <select id="visit-status">
+                <option value="成功" ${(fb.visit_status || '') === '成功' ? 'selected' : ''}>成功</option>
+                <option value="未见到" ${fb.visit_status === '未见到' ? 'selected' : ''}>未见到</option>
+                <option value="已搬迁" ${fb.visit_status === '已搬迁' ? 'selected' : ''}>已搬迁</option>
+                <option value="地址有误" ${fb.visit_status === '地址有误' ? 'selected' : ''}>地址有误</option>
+                <option value="其他" ${fb.visit_status === '其他' ? 'selected' : ''}>其他</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>拜访日期</label>
+            <input type="date" id="visit-date" value="${fb.visit_date || planData.planned_date || ''}">
+        </div>
+        <div class="form-group">
+            <label>拜访人</label>
+            <input type="text" id="visitor-name" value="${fb.visitor_name || planData.visitor_name || ''}" placeholder="填写拜访人姓名">
+        </div>
+
+        <h3 style="margin-top:1.5rem;">③ 简要总结</h3>
+        <div class="form-group">
+            <input type="text" id="summary" value="${fb.summary || ''}" placeholder="简要总结拜访结果，如：对方表示暂无合作意向">
+        </div>
+
+        <h3 style="margin-top:1.5rem;">④ 联系情况</h3>
+        <div class="checkbox-row">
+            <label><input type="checkbox" id="contact-obtained" ${fb.contact_obtained ? 'checked' : ''}> 获取联系方式</label>
+            <label><input type="checkbox" id="has-business-card" ${fb.has_business_card ? 'checked' : ''}> 有名片</label>
+            <label><input type="checkbox" id="has-contact-info" ${fb.has_contact_info ? 'checked' : ''}> 获取联系信息</label>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">⑤ 沟通详情</h3>
+        <div class="form-group">
+            <textarea id="communication-detail" placeholder="详细描述沟通情况...">${fb.communication_detail || ''}</textarea>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">⑥ 标签</h3>
+        <div class="tag-row">
+            ${TAG_OPTIONS.map(t =>
+                `<button class="tag-btn ${selectedTags.has(t) ? 'active' : ''}" onclick="toggleTag('${t}')">${t}</button>`
+            ).join('')}
+        </div>
+
+        <h3 style="margin-top:1.5rem;">⑦ 后续建议</h3>
+        <div class="form-group">
+            <textarea id="follow-up" placeholder="后续跟进建议...">${fb.follow_up_suggestions || ''}</textarea>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-secondary" onclick="window.close()">取消</button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitFeedback()">${fb.id ? '✅ 更新反馈' : '✅ 提交'}</button>
+    </div>`;
+}
+
+function selectAction(action) {
+    selectedAction = action;
+    document.getElementById('opt-completed').className = 'status-opt' + (action === 'completed' ? ' selected-completed' : '');
+    document.getElementById('opt-cancelled').className = 'status-opt' + (action === 'cancelled' ? ' selected-cancelled' : '');
+    document.getElementById('section-completed').className = 'form-section' + (action === 'completed' ? ' visible' : '');
+    document.getElementById('section-cancelled').className = 'form-section' + (action === 'cancelled' ? ' visible' : '');
+}
+
+function toggleTag(tag) {
+    const btns = document.querySelectorAll('.tag-btn');
+    if (selectedTags.has(tag)) selectedTags.delete(tag);
+    else selectedTags.add(tag);
+    btns.forEach(btn => {
+        if (btn.textContent === tag) btn.classList.toggle('active');
+    });
+}
+
+async function submitFeedback() {
+    if (!selectedAction) { alert('请先选择操作（标记完成或取消计划）'); return; }
+
+    if (selectedAction === 'cancelled') {
+        const reason = document.getElementById('cancel-reason').value.trim();
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true; btn.textContent = '提交中...';
+        try {
+            const resp = await fetch(`${API_BASE}/api/plans/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` }, body: JSON.stringify({ planned_date: planData.planned_date || '', visitor_name: planData.visitor_name || '' }) });
+            const resp2 = await fetch(`${API_BASE}/api/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                body: JSON.stringify({
+                    visit_plan_id: PLAN_ID,
+                    visit_date: planData.planned_date || '',
+                    visitor_name: planData.visitor_name || '',
+                    visit_status: '其他',
+                    summary: reason,
+                    plan_status: 'cancelled',
+                }),
+            });
+            const result = await resp2.json();
+            if (result.success) {
+                document.getElementById('content').innerHTML = `
+                    <div class="success-msg">
+                        <div class="icon">✅</div>
+                        <h2>计划已取消</h2>
+                        <p>原因：${reason}</p>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="window.close()">关闭页面</button>
+                            <button class="btn btn-secondary" onclick="window.open('/plans?token=${TOKEN}','_blank')">📋 查看计划列表</button>
+                        </div>
+                    </div>`;
+            } else { alert('提交失败'); btn.disabled = false; btn.textContent = '✅ 提交'; }
+        } catch (e) { alert('提交失败：' + e.message); btn.disabled = false; btn.textContent = '✅ 提交'; }
+        return;
+    }
+
+    // completed 表单
+    const data = {
+        visit_plan_id: PLAN_ID,
+        visit_date: document.getElementById('visit-date').value,
+        visitor_name: document.getElementById('visitor-name').value.trim(),
+        visit_status: document.getElementById('visit-status').value,
+        contact_obtained: document.getElementById('contact-obtained').checked,
+        has_business_card: document.getElementById('has-business-card').checked,
+        has_contact_info: document.getElementById('has-contact-info').checked,
+        summary: document.getElementById('summary').value.trim(),
+        communication_detail: document.getElementById('communication-detail').value.trim(),
+        follow_up_suggestions: document.getElementById('follow-up').value.trim(),
+        tags: Array.from(selectedTags),
+        plan_status: 'completed',
+    };
+
+    if (!data.visitor_name) { alert('请填写拜访人'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = '提交中...';
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify(data),
+        });
+        const result = await resp.json();
+        if (result.success) {
+            document.getElementById('content').innerHTML = `
+                <div class="success-msg">
+                    <div class="icon">✅</div>
+                    <h2>反馈已保存</h2>
+                    <p>拜访反馈已成功提交</p>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="window.close()">关闭页面</button>
+                        <button class="btn btn-secondary" onclick="window.open('/plans?token=${TOKEN}','_blank')">📋 查看计划列表</button>
+                    </div>
+                </div>`;
+        } else { alert('提交失败'); btn.disabled = false; btn.textContent = '✅ 提交'; }
+    } catch (e) { alert('提交失败：' + e.message); btn.disabled = false; btn.textContent = '✅ 提交'; }
+}
+
+loadPlan();
+</script>
+</body>
+</html>

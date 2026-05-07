@@ -1,0 +1,18 @@
+[ts_quant_db]
+host = localhost
+port = 5432
+dbname = ts_quant_db
+user = db_query_user
+password = your_database_password_here
+
+[fund_map_db]
+host = localhost
+port = 5432
+dbname = fund_map_db
+user = fund_map_user
+password = your_database_password_here
+
+[jwt]
+secret = change-me-to-a-random-secret-key
+algorithm = HS256
+expire_minutes = 480

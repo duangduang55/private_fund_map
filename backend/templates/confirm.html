@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>确认拜访计划</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0a0a0f; color: #e0e0e0; min-height: 100vh;
+}
+.container { max-width: 750px; margin: 0 auto; padding: 2rem 1.5rem; }
+.header {
+    text-align: center; margin-bottom: 2rem;
+    display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
+}
+.header h1 {
+    font-size: 1.8rem; font-weight: 700; color: #00d4aa;
+    text-shadow: 0 0 20px rgba(0,212,170,0.3); margin-bottom: 0.3rem; width: 100%;
+}
+.header p { color: #6b7280; font-size: 0.9rem; width: 100%; }
+.count-badge {
+    display: inline-block; padding: 0.3rem 1rem; border-radius: 20px;
+    background: linear-gradient(135deg, #00d4aa22, #0ea5e922);
+    border: 1px solid rgba(0,212,170,0.3); color: #00d4aa; font-size: 0.9rem;
+    font-weight: 600; margin-bottom: 1rem;
+}
+.btn-export-pdf {
+    display: inline-block; padding: 0.3rem 1rem; border-radius: 20px;
+    background: linear-gradient(135deg, #ef444422, #f59e0b22);
+    border: 1px solid rgba(239,68,68,0.3); color: #f87171; font-size: 0.9rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+}
+.btn-export-pdf:hover { background: linear-gradient(135deg, #ef444433, #f59e0b33); border-color: #ef4444; }
+.card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    padding: 1rem 1.2rem; margin-bottom: 0.6rem;
+    transition: border-color 0.2s;
+}
+.card:hover { border-color: rgba(0,212,170,0.35); }
+.card-info { flex: 1; }
+.card-name { font-size: 15px; font-weight: 600; color: #e0e0e0; margin-bottom: 4px; }
+.card-detail { font-size: 12px; color: #9ca3af; line-height: 1.6; }
+.card-detail .label { color: #6b7280; }
+.card-detail-row { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 2px; }
+.card-detail-row .label { color: #6b7280; }
+.card-detail-row .value { color: #d1d5db; font-weight: 600; }
+.match-reason { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.match-tag {
+    display: inline-block; padding: 2px 10px; border-radius: 10px;
+    font-size: 11px; font-weight: 600;
+}
+.match-tag.product { background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
+.match-tag.executive { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+.match-tag.none { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+
+.empty-state {
+    text-align: center; padding: 3rem 1rem; color: #6b7280;
+}
+.empty-state p { font-size: 16px; }
+.form-row {
+    display: flex; gap: 1rem; margin: 1.5rem 0;
+}
+.form-group { flex: 1; }
+.form-group label {
+    display: block; font-size: 0.8rem; color: #00d4aa; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem;
+}
+.form-group input {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid rgba(0,212,170,0.3); background: rgba(255,255,255,0.05);
+    color: #e0e0e0; font-size: 14px; outline: none;
+}
+.form-group input:focus { border-color: #00d4aa; }
+.btn-row { display: flex; gap: 1rem; margin-top: 0.5rem; }
+.btn {
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 600; cursor: pointer; text-align: center;
+    transition: all 0.3s;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00d4aa, #0ea5e9); color: white;
+    box-shadow: 0 4px 15px rgba(0,212,170,0.3);
+}
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(0,212,170,0.45); }
+.btn-primary:disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+.btn-secondary {
+    background: transparent; color: #00d4aa; border: 1px solid #00d4aa;
+}
+.btn-secondary:hover { background: rgba(0,212,170,0.1); }
+.btn-pdf {
+    background: transparent; color: #f87171; border: 1px solid rgba(239,68,68,0.4);
+}
+.btn-pdf:hover { background: rgba(239,68,68,0.1); }
+.success-msg {
+    text-align: center; padding: 3rem 1rem;
+}
+.success-msg .icon { font-size: 48px; margin-bottom: 1rem; }
+.success-msg h2 { color: #00d4aa; margin-bottom: 0.5rem; }
+.success-msg p { color: #9ca3af; margin-bottom: 1.5rem; }
+.footer { text-align: center; color: #4b5563; font-size: 0.75rem; padding: 2rem 0; }
+
+/* ── Print / PDF ── */
+@media print {
+    @page { margin: 0.6in 0.5in; size: A4; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body { background: #fff; color: #222; font-size: 11pt; line-height: 1.5; }
+
+    .container { max-width: 100%; padding: 0; }
+    .no-print { display: none !important; }
+
+    /* ── 页头 ── */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 24pt;
+        padding-bottom: 16pt;
+        border-bottom: 3px solid #1a56db;
+    }
+    .print-header h1 {
+        font-size: 22pt; font-weight: 700; color: #1a1a2e;
+        margin-bottom: 4pt; letter-spacing: 1pt;
+    }
+    .print-header .print-sub {
+        font-size: 10pt; color: #555; margin-bottom: 2pt;
+    }
+    .print-header .print-meta {
+        font-size: 9pt; color: #888; margin-top: 4pt;
+    }
+
+    /* ── 统计条 ── */
+    .count-badge {
+        border: 1px solid #ccc; color: #333; background: #f8f9fa;
+        font-size: 10pt; font-weight: 600; display: inline-block;
+        padding: 4pt 14pt; border-radius: 4pt; margin-bottom: 16pt;
+    }
+
+    /* ── 卡片（PDF 表格风格） ── */
+    .card {
+        background: #fff; border: 1px solid #d0d0d0;
+        border-left: 4px solid #1a56db;
+        border-radius: 0;
+        padding: 10pt 12pt;
+        margin-bottom: 8pt;
+        break-inside: avoid;
+        display: flex; align-items: flex-start;
+    }
+    .card:hover { border-color: #d0d0d0; }
+    .card-info { flex: 1; }
+    .card-name {
+        font-size: 12pt; font-weight: 700; color: #1a1a2e; margin-bottom: 3pt;
+    }
+    .card-detail { font-size: 9pt; color: #555; line-height: 1.6; }
+    .card-detail-row {
+        display: flex; flex-wrap: wrap; gap: 4pt 20pt; margin-top: 1pt;
+    }
+    .card-detail-row .label { color: #888; }
+    .card-detail-row .value { color: #222; font-weight: 600; }
+
+    .match-reason { margin-top: 6pt; }
+    .match-tag {
+        display: inline-block; padding: 1pt 8pt; border-radius: 3pt;
+        font-size: 8pt; font-weight: 600; margin-right: 4pt;
+    }
+    .match-tag.product { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .match-tag.executive { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+    /* ── 提交成功页面额外信息 ── */
+    .success-msg { padding: 0 0 16pt 0 !important; }
+    .success-msg .icon { display: none; }
+    .success-msg h2 { font-size: 14pt; color: #1a56db; margin-bottom: 2pt; }
+    .success-msg p { font-size: 10pt; color: #555; margin-bottom: 0; }
+
+    /* ── 页脚 ── */
+    .footer { color: #bbb; font-size: 8pt; }
+}
+.print-header { display: none; }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="header no-print">
+        <h1>确认拜访计划</h1>
+        <p>检查待拜访清单，填写计划信息后提交</p>
+    </div>
+    <div id="content">
+        <div class="empty-state"><p>加载中...</p></div>
+    </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const TOKEN = new URLSearchParams(location.search).get('token') || '';
+const URL_PARAMS = new URLSearchParams(location.search);
+const PRODUCT_KEYWORDS = (URL_PARAMS.get('product_name_query') || '').split(/[,\s]+/).filter(Boolean);
+const EXEC_KEYWORDS = (URL_PARAMS.get('executive_query') || '').split(/[,\s]+/).filter(Boolean);
+let cartItems = [];
+let matchReasons = {};
+
+async function loadCart() {
+    try {
+        const resp = await fetch(`${API_BASE}/api/cart`, {
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        cartItems = (await resp.json()).data || [];
+        if (cartItems.length > 0 && (PRODUCT_KEYWORDS.length > 0 || EXEC_KEYWORDS.length > 0)) {
+            await fetchMatchReasons();
+        }
+        render();
+    } catch (e) {
+        document.getElementById('content').innerHTML =
+            `<div class="empty-state"><p>加载失败：${e.message}</p></div>`;
+    }
+}
+
+async function fetchMatchReasons() {
+    try {
+        const resp = await fetch(`${API_BASE}/api/match-reasons`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reg_nums: cartItems.map(i => i.reg_num),
+                product_keywords: PRODUCT_KEYWORDS,
+                executive_keywords: EXEC_KEYWORDS,
+            })
+        });
+        const result = await resp.json();
+        matchReasons = result.data || {};
+    } catch (e) {
+        console.warn('获取命中原因失败:', e.message);
+    }
+}
+
+function getMatchHtml(regNum) {
+    const reasons = matchReasons[regNum];
+    if (!reasons) return '';
+
+    const product = reasons.product_match;
+    const executive = reasons.executive_match;
+
+    if (!product && !executive) return '';
+
+    let tags = '';
+    if (product) tags += `<span class="match-tag product">产品名命中</span>`;
+    if (executive) tags += `<span class="match-tag executive">高管履历命中</span>`;
+    return `<div class="match-reason">${tags}</div>`;
+}
+
+function render() {
+    const el = document.getElementById('content');
+    if (cartItems.length === 0) {
+        el.innerHTML = `<div class="empty-state">
+            <p style="font-size:32px;margin-bottom:12px;">📋</p>
+            <p>待拜访清单为空</p>
+            <p style="font-size:13px;margin-top:8px;color:#6b7280;">请在地图上添加私募到待拜访清单</p>
+            <button class="btn btn-primary no-print" style="margin-top:16px;max-width:200px;" onclick="window.close()">关闭页面</button>
+        </div>`;
+        return;
+    }
+
+    const hasKeywords = PRODUCT_KEYWORDS.length > 0 || EXEC_KEYWORDS.length > 0;
+
+    let html = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem;">
+        <span class="count-badge">共 ${cartItems.length} 条</span>
+        <button class="btn-export-pdf no-print" onclick="exportPdf()">📄 导出 PDF</button>
+    </div>`;
+
+    // 打印页头（打印时显示）
+    html += `<div class="print-header">
+        <h1>私募拜访计划清单</h1>
+        <div class="print-sub">待拜访私募机构清单 · ${new Date().toLocaleDateString('zh-CN')}</div>
+        <div class="print-meta">共 ${cartItems.length} 家机构</div>
+    </div>`;
+
+    cartItems.forEach(item => {
+        const matchHtml = getMatchHtml(item.reg_num);
+        html += `<div class="card">
+            <div class="card-info">
+                <div class="card-name">${item.org_name}</div>
+                <div class="card-detail">${item.reg_num}</div>
+                <div class="card-detail-row">
+                    <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>
+                    <span><span class="label">基金数量</span> <span class="value">${item.fund_count || '-'}</span></span>
+                </div>
+                <div class="card-detail"><span class="label">办公地址</span> <span class="value">${item.office_address || '-'}</span></div>
+                ${matchHtml}
+            </div>
+            <button class="card-remove no-print" onclick="removeItem(${item.id})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:6px 10px;border-radius:6px;flex-shrink:0;">🗑️ 删除</button>
+        </div>`;
+    });
+
+    html += `
+    <div class="no-print" style="margin-top:1.5rem;border-top:1px solid rgba(0,212,170,0.15);padding-top:1.5rem;">
+        <div class="form-row">
+            <div class="form-group">
+                <label>计划拜访日期</label>
+                <input type="date" id="plan-date">
+            </div>
+            <div class="form-group">
+                <label>拜访人</label>
+                <input type="text" id="plan-visitor" placeholder="填写拜访人姓名">
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="window.close()">返回地图</button>
+            <button class="btn btn-pdf" onclick="exportPdf()">📄 导出 PDF</button>
+            <button class="btn btn-primary" id="submit-btn" onclick="submitPlan()">✅ 确认提交</button>
+        </div>
+    </div>`;
+
+    el.innerHTML = html;
+    const dateInput = document.getElementById('plan-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
+}
+
+function exportPdf() {
+    window.print();
+}
+
+async function removeItem(id) {
+    try {
+        const resp = await fetch(`${API_BASE}/api/cart/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        if ((await resp.json()).success) {
+            cartItems = cartItems.filter(i => i.id !== id);
+            render();
+        }
+    } catch (e) {
+        alert('删除失败：' + e.message);
+    }
+}
+
+async function submitPlan() {
+    const date = document.getElementById('plan-date').value;
+    const visitor = document.getElementById('plan-visitor').value.trim();
+    if (!date) { alert('请选择拜访日期'); return; }
+    if (!visitor) { alert('请填写拜访人姓名'); return; }
+
+    // 保存当前购物车数据（提交后购物车会被清空）
+    const savedItems = cartItems.slice();
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = '提交中...';
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/plans/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify({ planned_date: date, visitor_name: visitor })
+        });
+        const result = await resp.json();
+        if (result.success) {
+            // 用保存的数据 + API 返回的计划信息构建完整卡片
+            const planRegNums = {};
+            (result.data || []).forEach(p => { planRegNums[p.reg_num] = p; });
+
+            let plansHtml = savedItems.map(item => {
+                const plan = planRegNums[item.reg_num] || {};
+                const matchHtml = getMatchHtml(item.reg_num);
+                return `<div class="card">
+                    <div class="card-info">
+                        <div class="card-name">${item.org_name}</div>
+                        <div class="card-detail">${item.reg_num}</div>
+                        <div class="card-detail-row">
+                            <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>
+                            <span><span class="label">基金数量</span> <span class="value">${item.fund_count || '-'}</span></span>
+                        </div>
+                        <div class="card-detail"><span class="label">办公地址</span> <span class="value">${item.office_address || '-'}</span></div>
+                        ${matchHtml}
+                        <div class="card-detail" style="margin-top:4pt;"><span class="label">计划拜访</span> <span class="value">${plan.planned_date || date} | ${plan.visitor_name || visitor}</span></div>
+                    </div>
+                    <span style="color:#fbbf24;font-size:13px;flex-shrink:0;">⏳ 待拜访</span>
+                </div>`;
+            }).join('');
+
+            document.getElementById('content').innerHTML = `
+                <div class="print-header">
+                    <h1>私募拜访计划清单</h1>
+                    <div class="print-sub">已提交 · 拜访人 ${visitor} · 计划日期 ${date}</div>
+                    <div class="print-meta">共 ${result.count} 条拜访计划 · 生成时间 ${new Date().toLocaleString('zh-CN')}</div>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <div class="success-msg" style="padding:1.5rem 1rem;">
+                        <div class="icon" style="font-size:36px;">🎉</div>
+                        <h2 style="font-size:1.3rem;">提交成功！</h2>
+                        <p>已生成 ${result.count} 条拜访计划</p>
+                    </div>
+                    ${plansHtml}
+                </div>
+                <div class="btn-row no-print">
+                    <button class="btn btn-primary" onclick="window.open('/plans?token=${TOKEN}','_blank')">查看全部计划</button>
+                    <button class="btn btn-pdf" onclick="window.print()">📄 导出 PDF</button>
+                </div>
+            `;
+        } else {
+            alert('提交失败');
+            btn.disabled = false; btn.textContent = '✅ 确认提交';
+        }
+    } catch (e) {
+        alert('提交失败：' + e.message);
+        btn.disabled = false; btn.textContent = '✅ 确认提交';
+    }
+}
+
+loadCart();
+</script>
+</body>
+</html>
