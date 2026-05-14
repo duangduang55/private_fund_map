@@ -243,7 +243,7 @@ streamlit run app.py --server.port 8501
 
 ```python
 {"host": "localhost", "port": 5432, "dbname": "ts_quant_db",
- "user": "db_query_user", "password": "123456789"}
+ "user": "your_readonly_user", "password": "your_password"}
 ```
 
 核心表：
@@ -254,7 +254,7 @@ streamlit run app.py --server.port 8501
 
 ```python
 {"host": "localhost", "port": 5432, "dbname": "fund_map_db",
- "user": "fund_map_user", "password": "123456789"}
+ "user": "your_db_user", "password": "your_password"}
 ```
 
 4 张业务表：

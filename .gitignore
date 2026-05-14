@@ -23,6 +23,10 @@ venv_*/
 *.log
 nohup.out
 
+# ── AI 开发辅助文件（不上传公开仓库） ──
+.claude/
+CLAUDE.md
+
 # ── 项目开发中间产物 ──
 team-work/
 HARNESS_PROGRESS.md
