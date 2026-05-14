@@ -178,10 +178,47 @@ def clear_cart(user_id: int) -> None:
         conn.close()
 
 
+# ── 星标切换 ──
+
+def toggle_cart_star(cart_id: int, user_id: int) -> bool:
+    conn = get_fm_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE visit_cart SET starred = NOT COALESCE(starred, false) WHERE id = %s AND user_id = %s RETURNING starred",
+                (cart_id, user_id),
+            )
+            conn.commit()
+            return cur.rowcount > 0
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
+def set_plan_star(plan_id: int, user_id: int, starred: bool) -> bool:
+    """设置拜访计划的星标状态"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE visit_plans SET starred = %s WHERE id = %s AND user_id = %s",
+                (starred, plan_id, user_id),
+            )
+            conn.commit()
+            return cur.rowcount > 0
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
 # ── 拜访计划 ──
 
-def create_plans_from_cart(user_id: int, planned_date: str, visitor_name: str) -> list[dict]:
-    """将购物车中的条目转为拜访计划"""
+def create_plans_from_cart(user_id: int, planned_date: str, visitor_name: str, batch_id: str = "") -> list[dict]:
+    """将购物车中的条目转为拜访计划（同批次共享 batch_id，星标状态继承）"""
     items = get_cart_items(user_id)
     if not items:
         return []
@@ -193,9 +230,9 @@ def create_plans_from_cart(user_id: int, planned_date: str, visitor_name: str) -
                 cur.execute(
                     """INSERT INTO visit_plans
                        (reg_num, org_name, org_aum, fund_count, office_address, office_coordinates,
-                        planned_date, visitor_name, user_id, status)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
-                       RETURNING id, reg_num, org_name, planned_date, visitor_name, status""",
+                        planned_date, visitor_name, user_id, status, batch_id, starred)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s)
+                       RETURNING id, reg_num, org_name, planned_date, visitor_name, status, batch_id, starred""",
                     (
                         item["reg_num"],
                         item["org_name"],
@@ -206,6 +243,8 @@ def create_plans_from_cart(user_id: int, planned_date: str, visitor_name: str) -
                         planned_date,
                         visitor_name,
                         user_id,
+                        batch_id,
+                        item.get("starred", False),
                     ),
                 )
                 row = cur.fetchone()
@@ -235,6 +274,26 @@ def get_user_plans(user_id: int, role: str) -> list[dict]:
                     "SELECT vp.*, u.display_name as creator_name FROM visit_plans vp LEFT JOIN users u ON vp.user_id = u.id WHERE vp.user_id = %s ORDER BY vp.planned_date DESC",
                     (user_id,),
                 )
+            return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def get_plans_by_batch(batch_id: str) -> list[dict]:
+    """按 batch_id 查询批次内所有计划（含反馈信息）"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """SELECT vp.*, u.display_name as creator_name,
+                          vf.id as feedback_id, vf.visit_status as feedback_status
+                   FROM visit_plans vp
+                   LEFT JOIN users u ON vp.user_id = u.id
+                   LEFT JOIN visit_feedback vf ON vf.visit_plan_id = vp.id
+                   WHERE vp.batch_id = %s
+                   ORDER BY vp.id""",
+                (batch_id,),
+            )
             return [dict(r) for r in cur.fetchall()]
     finally:
         conn.close()
@@ -519,5 +578,69 @@ def batch_import_with_feedback(user_id: int, records: list[dict]) -> int:
     except Exception:
         conn.rollback()
         return 0
+    finally:
+        conn.close()
+
+
+def get_user_tags(user_id: int) -> list[str]:
+    """获取用户历史反馈中使用过的所有标签（去重、排序）"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT DISTINCT unnest(vf.tags) as tag
+                FROM visit_feedback vf
+                JOIN visit_plans vp ON vf.visit_plan_id = vp.id
+                WHERE vp.user_id = %s
+                  AND vf.tags IS NOT NULL
+                  AND cardinality(vf.tags) > 0
+                ORDER BY tag
+            """, (user_id,))
+            return [row["tag"] for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+# ── 私募拜访记录详情 ──
+
+def get_all_visit_records(reg_num: str) -> list[dict]:
+    """获取某个私募的所有拜访记录（含反馈），按计划日期降序"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """SELECT vp.id, vp.reg_num, vp.org_name, vp.org_aum, vp.fund_count,
+                          vp.planned_date, vp.visitor_name, vp.status, vp.remark,
+                          vf.id as feedback_id, vf.visit_status, vf.summary,
+                          vf.communication_detail, vf.follow_up_suggestions, vf.tags,
+                          vf.contact_obtained, vf.has_business_card, vf.has_contact_info,
+                          vf.visit_date, vf.visitor_name as feedback_visitor
+                   FROM visit_plans vp
+                   LEFT JOIN visit_feedback vf ON vf.visit_plan_id = vp.id
+                   WHERE vp.reg_num = %s
+                   ORDER BY vp.planned_date DESC, vp.created_at DESC""",
+                (reg_num,),
+            )
+            return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def get_fund_tags(reg_num: str) -> list[str]:
+    """获取某个私募的所有标签（去重）"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """SELECT DISTINCT unnest(vf.tags) as tag
+                   FROM visit_feedback vf
+                   JOIN visit_plans vp ON vf.visit_plan_id = vp.id
+                   WHERE vp.reg_num = %s
+                     AND vf.tags IS NOT NULL
+                     AND cardinality(vf.tags) > 0
+                   ORDER BY tag""",
+                (reg_num,),
+            )
+            return [row["tag"] for row in cur.fetchall()]
     finally:
         conn.close()

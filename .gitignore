@@ -1,44 +1,41 @@
-# Python
+# ── 环境配置 ──
+.env
+.env.local
+
+# ── Python ──
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual Environment
+dist/
+build/
+.eggs/
 .venv/
 venv/
-env/
+venv_*/
+*.egg
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.python-version
 
-# IDE
-.vscode/
+# ── 日志 / 运行时 ──
+*.log
+nohup.out
+
+# ── 项目开发中间产物 ──
+team-work/
+HARNESS_PROGRESS.md
+migration_*.sql
+
+# ── IDE ──
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 
-# OS
+# ── OS ──
 .DS_Store
 Thumbs.db
-
-# Configuration (contains sensitive info)
-config.ini
-
-# Logs
-*.log
+.DS_Store?

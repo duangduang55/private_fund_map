@@ -81,7 +81,7 @@ def build_query_sql(params: dict) -> tuple[str, list]:
 
     org_kws = params.get("org_name_keywords", [])
     if org_kws:
-        name_conditions = [f"l.org_name ILIKE %s" for _ in org_kws]
+        name_conditions = ["l.org_name ILIKE %s" for _ in org_kws]
         for kw in org_kws:
             q_params.append(f"%{kw}%")
         sql_parts.append(f"AND ({' OR '.join(name_conditions)})")

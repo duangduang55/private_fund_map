@@ -1,9 +1,17 @@
 """私募基金拓客辅助系统 — Streamlit 主入口"""
 
+import os
 import streamlit as st
 import requests
 
-API_BASE = "http://localhost:8000"
+# 从项目根目录加载 .env
+from pathlib import Path
+env_path = Path(__file__).resolve().parent / ".env"
+if env_path.exists():
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=env_path)
+
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8100")
 
 # ── 页面配置 ──
 st.set_page_config(
@@ -21,6 +29,22 @@ if "user" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "query"
 
+# ── 从 URL 参数恢复登录状态（支持页面刷新） ──
+if not st.session_state.token:
+    token_from_url = st.query_params.get("token")
+    if token_from_url:
+        try:
+            resp = requests.get(
+                f"{API_BASE}/api/auth/me",
+                headers={"Authorization": f"Bearer {token_from_url}"},
+                timeout=5,
+            )
+            if resp.ok:
+                st.session_state.token = token_from_url
+                st.session_state.user = resp.json()
+        except Exception:
+            pass
+
 
 # ── 登录/退出函数 ──
 def do_login(username, password):
@@ -32,11 +56,12 @@ def do_login(username, password):
             data = resp.json()
             st.session_state.token = data["token"]
             st.session_state.user = data["user"]
+            st.query_params["token"] = data["token"]
             return True, ""
         else:
             return False, resp.json().get("detail", "登录失败")
     except requests.ConnectionError:
-        return False, "无法连接后端服务，请确认 FastAPI 已启动（localhost:8000）"
+        return False, "无法连接后端服务，请确认 FastAPI 已启动（localhost:8100）"
     except Exception as e:
         return False, str(e)
 
@@ -44,66 +69,91 @@ def do_login(username, password):
 def do_logout():
     st.session_state.token = None
     st.session_state.user = None
+    st.query_params.clear()
     st.rerun()
 
 
-# ── 自定义 CSS（复用现有暗色主题） ──
+# ── 自定义 CSS（企业蓝灰专业风格） ──
 CUSTOM_CSS = """
 <style>
-.stApp { background: #0a0a0f; }
+.stApp { background: #0f172a; }
 .main-title {
-    font-size: 2rem; font-weight: 700; color: #00d4aa;
-    text-align: center; padding: 1.2rem 0 0.3rem 0;
-    letter-spacing: 2px; text-shadow: 0 0 20px rgba(0,212,170,0.3);
+    font-size: 1.75rem; font-weight: 600; color: #f1f5f9;
+    text-align: center; padding: 1.2rem 0 0.2rem 0;
 }
 .sub-title {
-    text-align: center; color: #6b7280; font-size: 0.9rem; margin-bottom: 1.5rem;
+    text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;
 }
 .filter-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    background: #1e293b;
+    border: 1px solid #334155; border-radius: 6px;
     padding: 1.2rem 1.5rem; margin-bottom: 1rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
-.filter-card:hover { border-color: rgba(0,212,170,0.35); }
-.filter-label { color: #00d4aa; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.4rem; }
-.divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(0,212,170,0.3), transparent); margin: 0.8rem 0 1.2rem 0; }
+.filter-label {
+    color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem;
+}
+.divider {
+    height: 1px; background: #334155; margin: 0.8rem 0 1.2rem 0;
+}
 .stats-badge {
-    display: inline-block; background: linear-gradient(135deg, #00d4aa22, #0ea5e922);
-    border: 1px solid rgba(0,212,170,0.3); border-radius: 20px;
-    padding: 0.35rem 1rem; color: #00d4aa; font-size: 0.9rem; font-weight: 600;
+    display: inline-block; background: #1e293b;
+    border: 1px solid #334155; border-radius: 4px;
+    padding: 0.25rem 0.75rem; color: #f1f5f9; font-size: 0.85rem;
 }
 div.stButton > button {
-    background: linear-gradient(135deg, #00d4aa, #0ea5e9) !important;
-    color: white !important; font-weight: 600 !important;
-    border: none !important; border-radius: 8px !important;
-    padding: 0.5rem 2rem !important; letter-spacing: 1px;
-    transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,212,170,0.3);
+    background: #2563eb !important;
+    color: white !important; font-weight: 500 !important;
+    border: none !important; border-radius: 6px !important;
+    padding: 0.4rem 1.5rem !important;
 }
 div.stButton > button:hover {
-    transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,212,170,0.45);
+    background: #1d4ed8 !important;
 }
 .stSelectbox label, .stMultiSelect label, .stTextInput label, .stCheckbox label {
-    color: #00d4aa !important; font-size: 0.8rem !important; font-weight: 600 !important;
+    color: #94a3b8 !important; font-size: 0.8rem !important;
 }
-.footer { text-align: center; color: #4b5563; font-size: 0.75rem; padding: 2rem 0 0.5rem 0; }
+.footer { text-align: center; color: #475569; font-size: 0.75rem; padding: 2rem 0 0.5rem 0; }
 .user-info {
     position: fixed; top: 12px; right: 20px; z-index: 999;
-    background: rgba(26,26,46,0.9); border: 1px solid rgba(0,212,170,0.15);
-    border-radius: 8px; padding: 6px 14px; font-size: 13px; color: #e0e0e0;
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px; color: #f1f5f9;
     display: flex; align-items: center; gap: 12px;
 }
 .user-info .role-tag {
-    font-size: 11px; padding: 1px 8px; border-radius: 10px;
-    background: rgba(0,212,170,0.15); color: #00d4aa;
+    font-size: 11px; padding: 1px 8px; border-radius: 4px;
+    background: #1e3a5f; color: #93c5fd;
 }
 .stat-card {
-    background: linear-gradient(135deg,#1a1a2e,#16213e);
-    border: 1px solid rgba(0,212,170,0.15); border-radius: 10px;
+    background: #1e293b;
+    border: 1px solid #334155; border-radius: 6px;
     padding: 0.8rem 1rem; text-align: center;
 }
-.stat-card .num { font-size: 1.5rem; font-weight: 700; color: #00d4aa; }
-.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.stat-card .num { font-size: 1.5rem; font-weight: 600; color: #f1f5f9; }
+.stat-card .label { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+/* 隐藏 Streamlit 默认侧边栏（页面文件导航无用，本系统用自定义按钮） */
+section[data-testid="stSidebar"] { display: none !important; }
+
+/* 统计卡片按钮（覆盖全局按钮样式） */
+.stat-row div[data-testid="column"] div.stButton > button {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 6px !important;
+    padding: 0.8rem 1rem !important;
+    height: auto !important;
+    white-space: pre-line !important;
+    line-height: 1.3 !important;
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+    font-size: 1.5rem !important;
+}
+.stat-row div[data-testid="column"] div.stButton > button:hover {
+    border-color: #3b82f6 !important;
+    background: #1e293b !important;
+}
+.stat-row div[data-testid="column"] div.stButton > button[kind="primary"] {
+    border-color: #3b82f6 !important;
+}
 </style>
 """
 
@@ -118,8 +168,8 @@ def show_login():
     with col2:
         with st.container():
             st.markdown(
-                '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(0,212,170,0.15);'
-                'border-radius:12px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.3);">',
+                '<div style="background:#1e293b;border:1px solid #334155;'
+                'border-radius:6px;padding:2rem;">',
                 unsafe_allow_html=True,
             )
             username = st.text_input("用户名", placeholder="输入用户名")
@@ -131,7 +181,7 @@ def show_login():
                 else:
                     ok, msg = do_login(username, password)
                     if ok:
-                        st.success("登录成功！")
+                        st.query_params["token"] = st.session_state.token
                         st.rerun()
                     else:
                         st.error(msg)
@@ -147,11 +197,12 @@ def show_login():
 # ── 主导航栏 ──
 def show_navbar():
     user = st.session_state.user
-    cols = st.columns([1, 1, 1, 1, 1, 1, 2])
+    cols = st.columns([1, 1, 1, 1, 1, 1, 1, 2])
     pages = [
         ("query", "🔍 数据查询"),
         ("map", "🗺️ 地图看板"),
         ("plans", "📋 拜访计划"),
+        ("plan_list", "📄 计划列表"),
         ("history", "📈 拜访历史"),
         ("batch_import", "📥 补录"),
     ]
@@ -167,14 +218,14 @@ def show_navbar():
     # 用户信息
     with cols[-1]:
         st.markdown(
-            f'<div style="text-align:right;color:#e0e0e0;font-size:13px;padding:6px 0;">'
+            f'<div style="text-align:right;color:#f1f5f9;font-size:13px;padding:6px 0;">'
             f'{user["display_name"]} '
-            f'<span style="font-size:11px;padding:1px 8px;border-radius:10px;background:rgba(0,212,170,0.15);color:#00d4aa;">{user["role"]}</span>'
+            f'<span style="font-size:11px;padding:1px 8px;border-radius:4px;background:#1e3a5f;color:#93c5fd;">{user["role"]}</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
-    # 退出按钮单独放在最右边角落
-    with cols[5]:
+    # 退出按钮
+    with cols[6]:
         if st.button("🚪 退出", use_container_width=True):
             do_logout()
 
@@ -201,6 +252,12 @@ def main():
     elif page == "plans":
         from pages.plans import show_plans_page
         show_plans_page()
+    elif page == "plan_list":
+        st.markdown(
+            f'<meta http-equiv="refresh" content="0;url=http://localhost:8100/plans?token={st.session_state.token}">',
+            unsafe_allow_html=True,
+        )
+        st.info("正在跳转到计划列表页面…")
     elif page == "history":
         from pages.history import show_history_page
         show_history_page()
@@ -216,29 +273,29 @@ def show_map_page():
     st.markdown('<div class="filter-card">', unsafe_allow_html=True)
     st.markdown('<div class="filter-label">🗺️ 地图展示</div>', unsafe_allow_html=True)
     st.markdown(
-        '<p style="color:#9ca3af;font-size:14px;">点击下方按钮在新标签页打开动态地图看板，查看全部私募分布情况。</p>',
+        '<p style="color:#94a3b8;font-size:14px;">点击下方按钮在新标签页打开动态地图看板，查看全部私募分布情况。</p>',
         unsafe_allow_html=True,
     )
     if st.button("🗺️ 打开动态地图", use_container_width=True):
         token = st.session_state.token
-        map_url = f"http://localhost:8000/map?token={token}"
+        map_url = f"http://localhost:8100/map?token={token}"
         st.markdown(f'<meta http-equiv="refresh" content="0;url={map_url}">', unsafe_allow_html=True)
         st.success(f"地图已打开，如果未自动跳转请点击：[打开地图]({map_url})")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # 查询后地图入口（显示在结果区域）
+    # 查询后地图入口
     if "last_query_params" in st.session_state and st.session_state.last_query_params:
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         st.markdown('<div class="filter-label">📌 将查询结果显示到地图</div>', unsafe_allow_html=True)
         st.markdown(
-            '<p style="color:#9ca3af;font-size:14px;">将当前筛选结果发送到地图上查看分布。</p>',
+            '<p style="color:#94a3b8;font-size:14px;">将当前筛选结果发送到地图上查看分布。</p>',
             unsafe_allow_html=True,
         )
         token = st.session_state.token
         params = st.session_state.last_query_params
         qs = "&".join(f"{k}={v}" for k, v in params.items() if v)
-        map_url = f"http://localhost:8000/map?token={token}&{qs}"
+        map_url = f"http://localhost:8100/map?token={token}&{qs}"
         if st.button("📌 在地图上显示当前筛选结果", use_container_width=True):
             st.markdown(f'<meta http-equiv="refresh" content="0;url={map_url}">', unsafe_allow_html=True)
             st.success(f"[打开筛选结果地图]({map_url})")

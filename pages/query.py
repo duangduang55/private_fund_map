@@ -1,5 +1,6 @@
 """私募基金数据查询与导出页面（适配 Streamlit 多页面）"""
 
+import os
 import streamlit as st
 import pandas as pd
 import json
@@ -8,7 +9,7 @@ import io
 from datetime import datetime
 import requests
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8100")
 
 
 def parse_keywords(text: str) -> list[str]:
@@ -112,7 +113,7 @@ def show_query_page():
         dv = resp.json()
     except Exception as e:
         st.error(f"无法加载筛选选项：{e}")
-        st.info("请确认 FastAPI 后端已启动（localhost:8000）")
+        st.info("请确认 FastAPI 后端已启动（localhost:8100）")
         return
 
     col1, col2, col3 = st.columns(3)
@@ -191,8 +192,6 @@ def show_query_page():
     if query_clicked:
         product_kws = parse_keywords(product_name_query)
         exec_kws = parse_keywords(executive_query)
-        org_kws = parse_keywords(org_name_query)
-        prod_range = parse_product_range(product_range_text)
 
         # 保存查询参数供"在地图上显示"使用
         if query_params:
@@ -296,12 +295,11 @@ def show_query_page():
         with col_a:
             token = st.session_state.token
             qs = "&".join(f"{k}={v}" for k, v in query_params.items() if v)
-            map_url = f"http://localhost:8000/map?token={token}&{qs}"
+            map_url = f"{API_BASE}/map?token={token}&{qs}"
             st.markdown(
                 f'<a href="{map_url}" target="_blank">'
-                f'<button style="width:100%;padding:0.5rem 1rem;background:linear-gradient(135deg,#00d4aa,#0ea5e9);'
-                f'color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;'
-                f'box-shadow:0 4px 15px rgba(0,212,170,0.3);">🗺️ 在地图上显示</button></a>',
+                f'<button style="width:100%;padding:0.5rem 1rem;background:#2563eb;'
+                f'color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer;">🗺️ 在地图上显示</button></a>',
                 unsafe_allow_html=True,
             )
 

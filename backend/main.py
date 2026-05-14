@@ -2,11 +2,12 @@
 
 from fastapi import FastAPI, HTTPException, Depends, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import os
+import secrets
+import string
 
-from backend.config import TS_QUANT_DB
 from backend.auth_utils import hash_password, verify_password, create_token, decode_token
 from backend.db_tsquant import (
     query_funds,
@@ -28,8 +29,11 @@ from backend.db_fundmap import (
     add_to_cart,
     remove_from_cart,
     clear_cart,
+    toggle_cart_star,
+    set_plan_star,
     create_plans_from_cart,
     get_user_plans,
+    get_plans_by_batch,
     get_feedback_by_plan_id,
     upsert_feedback,
     update_plan_status,
@@ -38,6 +42,9 @@ from backend.db_fundmap import (
     auto_expire_plans,
     batch_import_visited,
     batch_import_with_feedback,
+    get_user_tags,
+    get_all_visit_records,
+    get_fund_tags,
 )
 
 # ── FastAPI 应用 ────────────────────────────────────────────────
@@ -52,6 +59,8 @@ app.add_middleware(
 )
 
 MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "map.html")
+BATCH_MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "batch_map.html")
+BATCH_DETAIL_PRINT_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "batch_detail_print.html")
 
 
 # ── 依赖：获取当前用户 ──────────────────────────────────────────
@@ -255,10 +264,35 @@ def map_page(token: str = Query(None)):
     """动态地图页面"""
     with open(MAP_HTML_PATH, encoding="utf-8") as f:
         html = f.read()
-    # 注入 token（JS 中的和 HTML 中的）
     token_str = (token or "")
     html = html.replace("'{{ token }}'", repr(token_str))
     html = html.replace("{{ token }}", token_str)
+    return HTMLResponse(html)
+
+
+@app.get("/batch-map", response_class=HTMLResponse)
+def batch_map_page(token: str = Query(None), batch_id: str = Query("")):
+    """批次机构地图页面"""
+    with open(BATCH_MAP_HTML_PATH, encoding="utf-8") as f:
+        html = f.read()
+    token_str = (token or "")
+    html = html.replace("'{{ token }}'", repr(token_str))
+    html = html.replace("{{ token }}", token_str)
+    html = html.replace("'{{ batch_id }}'", repr(batch_id))
+    html = html.replace("{{ batch_id }}", batch_id)
+    return HTMLResponse(html)
+
+
+@app.get("/batch-detail-print", response_class=HTMLResponse)
+def batch_detail_print_page(token: str = Query(None), batch_id: str = Query("")):
+    """批次详情打印页面（PDF导出）"""
+    with open(BATCH_DETAIL_PRINT_HTML_PATH, encoding="utf-8") as f:
+        html = f.read()
+    token_str = (token or "")
+    html = html.replace("'{{ token }}'", repr(token_str))
+    html = html.replace("{{ token }}", token_str)
+    html = html.replace("'{{ batch_id }}'", repr(batch_id))
+    html = html.replace("{{ batch_id }}", batch_id)
     return HTMLResponse(html)
 
 
@@ -309,6 +343,24 @@ def api_clear_cart(user: dict = Depends(get_current_user)):
     return {"success": True}
 
 
+@app.post("/api/cart/toggle-star/{cart_id}")
+def api_toggle_cart_star(cart_id: int, user: dict = Depends(get_current_user)):
+    ok = toggle_cart_star(cart_id, user["id"])
+    return {"success": ok}
+
+
+@app.post("/api/plans/toggle-star/{plan_id}")
+def api_toggle_plan_star(plan_id: int, user: dict = Depends(get_current_user)):
+    ok = set_plan_star(plan_id, user["id"], True)
+    return {"success": ok}
+
+
+@app.post("/api/plans/unstar/{plan_id}")
+def api_unstar_plan(plan_id: int, user: dict = Depends(get_current_user)):
+    ok = set_plan_star(plan_id, user["id"], False)
+    return {"success": ok}
+
+
 # ── 命中原因 API ──────────────────────────────────────────────
 
 @app.post("/api/match-reasons")
@@ -319,16 +371,29 @@ def api_match_reasons(req: MatchReasonsRequest):
 
 # ── 拜访计划 API ───────────────────────────────────────────────
 
+def _generate_batch_id() -> str:
+    """生成6位短随机ID"""
+    alphabet = string.ascii_lowercase + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(6))
+
+
 @app.post("/api/plans/confirm")
 def api_confirm_plans(req: ConfirmPlanRequest, user: dict = Depends(get_current_user)):
-    plans = create_plans_from_cart(user["id"], req.planned_date, req.visitor_name)
-    return {"success": True, "count": len(plans), "data": plans}
+    batch_id = _generate_batch_id()
+    plans = create_plans_from_cart(user["id"], req.planned_date, req.visitor_name, batch_id)
+    return {"success": True, "count": len(plans), "data": plans, "batch_id": batch_id}
 
 
 @app.get("/api/plans")
 def api_get_plans(user: dict = Depends(get_current_user)):
     auto_expire_plans()  # 每次查看计划时自动过期
     return {"data": get_user_plans(user["id"], user["role"])}
+
+
+@app.get("/api/plans/by-batch/{batch_id}")
+def api_get_plans_by_batch(batch_id: str, user: dict = Depends(get_current_user)):
+    """查询某批次下的所有拜访计划"""
+    return {"data": get_plans_by_batch(batch_id)}
 
 
 # ── 拜访反馈 API ──────────────────────────────────────────────
@@ -345,6 +410,13 @@ def api_save_feedback(req: FeedbackRequest, user: dict = Depends(get_current_use
     if req.plan_status:
         update_plan_status(req.visit_plan_id, req.plan_status)
     return {"success": fb is not None, "data": fb}
+
+
+# ── 用户标签 API ───────────────────────────────────────────────
+
+@app.get("/api/user-tags")
+def api_get_user_tags(user: dict = Depends(get_current_user)):
+    return get_user_tags(user["id"])
 
 
 # ── 拜访历史 API（含反馈信息） ───────────────────────────────
@@ -472,7 +544,48 @@ def api_visited_history(reg_num: str = Query("")):
     return {"data": get_visit_history(reg_num)}
 
 
+# ── 机构链接查询 API ───────────────────────────────────────
+
+class FundLinksRequest(BaseModel):
+    reg_nums: list[str]
+
+@app.post("/api/fund-links")
+def api_fund_links(req: FundLinksRequest):
+    """根据 reg_num 列表批量查询 detail_url"""
+    funds = query_funds_by_reg_nums(req.reg_nums)
+    return {"data": {f["reg_num"]: f.get("detail_url", "") for f in funds}}
+
+
+# ── 私募拜访记录详情 API ─────────────────────────────────
+
+@app.get("/api/fund-profile/{reg_num}")
+def api_fund_profile(reg_num: str, user: dict = Depends(get_current_user)):
+    """获取私募的详细信息 + 标签 + 拜访记录"""
+    # 从 ts_quant_db 获取机构基本信息
+    funds = query_funds_by_reg_nums([reg_num])
+    fund_info = funds[0] if funds else {"reg_num": reg_num}
+    # 从 fund_map_db 获取标签和拜访记录
+    tags = get_fund_tags(reg_num)
+    visits = get_all_visit_records(reg_num)
+    return {"fund": fund_info, "tags": tags, "visits": visits}
+
+
+# ── 详情页面 ─────────────────────────────────────────────
+
+DETAIL_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "detail.html")
+
+@app.get("/detail", response_class=HTMLResponse)
+def detail_page(token: str = Query(""), reg_num: str = Query("")):
+    with open(DETAIL_HTML_PATH, encoding="utf-8") as f:
+        html = f.read()
+    html = html.replace("'{{ token }}'", repr(token))
+    html = html.replace("{{ token }}", token)
+    html = html.replace("'{{ reg_num }}'", repr(reg_num))
+    html = html.replace("{{ reg_num }}", reg_num)
+    return HTMLResponse(html)
+
+
 # ── 启动 ────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8100)

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批次机构地图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f1f5f9; }
+#map { width: 100vw; height: 100vh; }
+
+.header {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; background: #1e293b; border: 1px solid #334155;
+  border-radius: 6px; padding: 10px 20px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  justify-content: center;
+}
+.header h2 { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+.header .info { font-size: 12px; color: #94a3b8; }
+.header .info strong { color: #f1f5f9; }
+.header .btn-back {
+  display: inline-block; padding: 6px 14px; border-radius: 4px;
+  background: #2563eb; color: white; text-decoration: none; font-size: 13px;
+}
+
+.legend {
+  position: absolute; bottom: 30px; left: 20px;
+  background: #1e293b; padding: 14px 18px; border-radius: 6px;
+  border: 1px solid #334155; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 1000;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; color: #f1f5f9; }
+.legend-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+
+.loading {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  color: #94a3b8; font-size: 16px; z-index: 500;
+}
+</style>
+</head>
+<body>
+<div class="loading" id="loading">加载中...</div>
+<div id="map"></div>
+
+<script>
+const API_BASE = window.location.origin;
+const TOKEN = '{{ token }}';
+const BATCH_ID = '{{ batch_id }}';
+
+let map = L.map('map', { zoomControl: true, attributionControl: false }).setView([35, 110], 5);
+L.tileLayer('https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+  maxZoom: 18
+}).addTo(map);
+
+const aumColors = {
+  "100亿元以上": "#8b5cf6", "50-100亿元": "#3b82f6", "20-50亿元": "#06b6d4",
+  "10-20亿元": "#10b981", "5-10亿元": "#84cc16", "0-5亿元": "#eab308",
+  "0-0.5亿元": "#f97316"
+};
+
+async function loadBatch() {
+  try {
+    const resp = await fetch(`${API_BASE}/api/plans/by-batch/${BATCH_ID}`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const data = await resp.json();
+    const plans = data.data || [];
+    if (plans.length === 0) {
+      document.getElementById('loading').textContent = '该批次无机构数据';
+      return;
+    }
+    renderMap(plans);
+  } catch (e) {
+    document.getElementById('loading').textContent = '加载失败：' + e.message;
+  }
+}
+
+function renderMap(plans) {
+  document.getElementById('loading').style.display = 'none';
+  const markers = [];
+  let hasStarred = false;
+
+  plans.forEach(p => {
+    const coords = (p.office_coordinates || '').split(',');
+    const lat = parseFloat(coords[0]);
+    const lng = parseFloat(coords[1]);
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const isStarred = p.starred === true || p.starred === 'true';
+    if (isStarred) hasStarred = true;
+
+    const aum = p.org_aum || '';
+    const baseColor = aumColors[aum] || '#6b7280';
+    const size = isStarred ? 40 : 26;
+    const borderColor = isStarred ? '#fbbf24' : '#ffffff';
+    const borderWidth = isStarred ? 4 : 3;
+
+    let html;
+    if (isStarred) {
+      html = `<div style="width:${size}px;height:${size}px;background:${baseColor};border-radius:50%;border:${borderWidth}px solid ${borderColor};box-shadow:0 0 18px 4px rgba(251,191,36,0.7);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#fbbf24;">⭐</div>`;
+    } else {
+      html = `<div style="width:${size}px;height:${size}px;background:${baseColor};border-radius:50%;border:${borderWidth}px solid ${borderColor};box-shadow:0 4px 12px rgba(0,0,0,0.5);"></div>`;
+    }
+
+    const icon = L.divIcon({
+      className: 'custom-marker',
+      html: html,
+      iconSize: [size + 12, size + 12],
+      iconAnchor: [(size + 12) / 2, (size + 12) / 2]
+    });
+
+    const marker = L.marker([lat, lng], { icon });
+    marker.bindTooltip(p.org_name, { direction: 'top' });
+
+    const statusMap = { 'pending': '⏳ 待拜访', 'completed': '✅ 已完成', 'cancelled': '❌ 已取消' };
+    const starTag = isStarred ? '<span style="color:#fbbf24;"> ⭐</span>' : '';
+    const popupContent = `
+      <div style="min-width:240px;">
+        <h3 style="margin-bottom:6px;font-size:16px;">${p.org_name}${starTag}</h3>
+        <p style="margin:4px 0;font-size:13px;color:#555;"><strong>管理规模</strong> ${aum || '-'} | <strong>基金</strong> ${p.fund_count || 0}</p>
+        <p style="margin:4px 0;font-size:13px;color:#555;"><strong>状态</strong> ${statusMap[p.status] || p.status}</p>
+        <p style="margin:4px 0;font-size:13px;color:#555;"><strong>拜访人</strong> ${p.visitor_name || '-'} | <strong>日期</strong> ${p.planned_date || '-'}</p>
+        <p style="margin:4px 0;font-size:13px;color:#555;">${p.office_address || ''}</p>
+      </div>`;
+    if (isStarred) {
+      marker.bindPopup(popupContent, { maxWidth: 300, className: '', autoClose: false, closeOnClick: false });
+      marker.openPopup();
+    } else {
+      marker.bindPopup(popupContent, { maxWidth: 300, className: '' });
+    }
+
+    markers.push(marker);
+    marker.addTo(map);
+  });
+
+  if (markers.length > 0) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.15));
+  }
+
+  // 图例
+  const legendHtml = `
+    <div class="legend">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#f1f5f9;">图例</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6b7280;border:2px solid #fbbf24;width:20px;height:20px;"></div> ⭐ 加星机构</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6b7280;width:20px;height:20px;"></div> 普通机构</div>
+      <div style="margin-top:6px;font-size:11px;color:#94a3b8;">共 ${plans.length} 家机构 ${hasStarred ? '· ⭐ 已加星' : ''}</div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', legendHtml);
+}
+
+loadBatch();
+</script>
+</body>
+</html>

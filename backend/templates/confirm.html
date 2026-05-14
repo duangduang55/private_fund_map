@@ -8,7 +8,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0a0a0f; color: #e0e0e0; min-height: 100vh;
+    background: #0f172a; color: #f1f5f9; min-height: 100vh;
 }
 .container { max-width: 750px; margin: 0 auto; padding: 2rem 1.5rem; }
 .header {
@@ -16,49 +16,42 @@ body {
     display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
 }
 .header h1 {
-    font-size: 1.8rem; font-weight: 700; color: #00d4aa;
-    text-shadow: 0 0 20px rgba(0,212,170,0.3); margin-bottom: 0.3rem; width: 100%;
+    font-size: 1.6rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.3rem; width: 100%;
 }
-.header p { color: #6b7280; font-size: 0.9rem; width: 100%; }
+.header p { color: #64748b; font-size: 0.9rem; width: 100%; }
 .count-badge {
-    display: inline-block; padding: 0.3rem 1rem; border-radius: 20px;
-    background: linear-gradient(135deg, #00d4aa22, #0ea5e922);
-    border: 1px solid rgba(0,212,170,0.3); color: #00d4aa; font-size: 0.9rem;
-    font-weight: 600; margin-bottom: 1rem;
+    display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;
+    background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 0.85rem;
+    margin-bottom: 1rem;
 }
 .btn-export-pdf {
-    display: inline-block; padding: 0.3rem 1rem; border-radius: 20px;
-    background: linear-gradient(135deg, #ef444422, #f59e0b22);
-    border: 1px solid rgba(239,68,68,0.3); color: #f87171; font-size: 0.9rem;
-    font-weight: 600; cursor: pointer; transition: all 0.2s;
-    text-decoration: none;
+    display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;
+    background: transparent; border: 1px solid #dc2626; color: #f87171; font-size: 0.85rem;
+    cursor: pointer; text-decoration: none;
 }
-.btn-export-pdf:hover { background: linear-gradient(135deg, #ef444433, #f59e0b33); border-color: #ef4444; }
+.btn-export-pdf:hover { background: rgba(220,38,38,0.08); }
 .card {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid rgba(0,212,170,0.15); border-radius: 12px;
+    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
     padding: 1rem 1.2rem; margin-bottom: 0.6rem;
-    transition: border-color 0.2s;
 }
-.card:hover { border-color: rgba(0,212,170,0.35); }
 .card-info { flex: 1; }
-.card-name { font-size: 15px; font-weight: 600; color: #e0e0e0; margin-bottom: 4px; }
-.card-detail { font-size: 12px; color: #9ca3af; line-height: 1.6; }
-.card-detail .label { color: #6b7280; }
+.card-name { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+.card-detail { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+.card-detail .label { color: #64748b; }
 .card-detail-row { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 2px; }
-.card-detail-row .label { color: #6b7280; }
-.card-detail-row .value { color: #d1d5db; font-weight: 600; }
+.card-detail-row .label { color: #64748b; }
+.card-detail-row .value { color: #e2e8f0; font-weight: 600; }
 .match-reason { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
 .match-tag {
-    display: inline-block; padding: 2px 10px; border-radius: 10px;
-    font-size: 11px; font-weight: 600;
+    display: inline-block; padding: 2px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
 }
-.match-tag.product { background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
-.match-tag.executive { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-.match-tag.none { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+.match-tag.product { background: rgba(37,99,235,0.12); color: #93c5fd; border: 1px solid rgba(37,99,235,0.3); }
+.match-tag.executive { background: rgba(217,119,6,0.12); color: #fcd34d; border: 1px solid rgba(217,119,6,0.3); }
+.match-tag.none { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
 
 .empty-state {
-    text-align: center; padding: 3rem 1rem; color: #6b7280;
+    text-align: center; padding: 3rem 1rem; color: #64748b;
 }
 .empty-state p { font-size: 16px; }
 .form-row {
@@ -66,42 +59,37 @@ body {
 }
 .form-group { flex: 1; }
 .form-group label {
-    display: block; font-size: 0.8rem; color: #00d4aa; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem;
+    display: block; font-size: 0.8rem; color: #94a3b8; font-weight: 500; margin-bottom: 0.4rem;
 }
 .form-group input {
-    width: 100%; padding: 10px 14px; border-radius: 8px;
-    border: 1px solid rgba(0,212,170,0.3); background: rgba(255,255,255,0.05);
-    color: #e0e0e0; font-size: 14px; outline: none;
+    width: 100%; padding: 10px 14px; border-radius: 6px;
+    border: 1px solid #475569; background: rgba(255,255,255,0.04);
+    color: #f1f5f9; font-size: 14px; outline: none;
 }
-.form-group input:focus { border-color: #00d4aa; }
+.form-group input:focus { border-color: #3b82f6; }
 .btn-row { display: flex; gap: 1rem; margin-top: 0.5rem; }
 .btn {
-    flex: 1; padding: 12px; border: none; border-radius: 8px;
-    font-size: 15px; font-weight: 600; cursor: pointer; text-align: center;
-    transition: all 0.3s;
+    flex: 1; padding: 12px; border: none; border-radius: 6px;
+    font-size: 15px; font-weight: 500; cursor: pointer; text-align: center;
 }
-.btn-primary {
-    background: linear-gradient(135deg, #00d4aa, #0ea5e9); color: white;
-    box-shadow: 0 4px 15px rgba(0,212,170,0.3);
-}
-.btn-primary:hover { box-shadow: 0 6px 20px rgba(0,212,170,0.45); }
-.btn-primary:disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+.btn-primary { background: #2563eb; color: white; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-primary:disabled { background: #475569; cursor: not-allowed; }
 .btn-secondary {
-    background: transparent; color: #00d4aa; border: 1px solid #00d4aa;
+    background: transparent; color: #3b82f6; border: 1px solid #3b82f6;
 }
-.btn-secondary:hover { background: rgba(0,212,170,0.1); }
+.btn-secondary:hover { background: rgba(59,130,246,0.08); }
 .btn-pdf {
-    background: transparent; color: #f87171; border: 1px solid rgba(239,68,68,0.4);
+    background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4);
 }
-.btn-pdf:hover { background: rgba(239,68,68,0.1); }
+.btn-pdf:hover { background: rgba(248,113,113,0.08); }
 .success-msg {
     text-align: center; padding: 3rem 1rem;
 }
 .success-msg .icon { font-size: 48px; margin-bottom: 1rem; }
-.success-msg h2 { color: #00d4aa; margin-bottom: 0.5rem; }
-.success-msg p { color: #9ca3af; margin-bottom: 1.5rem; }
-.footer { text-align: center; color: #4b5563; font-size: 0.75rem; padding: 2rem 0; }
+.success-msg h2 { color: #f1f5f9; margin-bottom: 0.5rem; }
+.success-msg p { color: #94a3b8; margin-bottom: 1.5rem; }
+.footer { text-align: center; color: #475569; font-size: 0.75rem; padding: 2rem 0; }
 
 /* ── Print / PDF ── */
 @media print {
@@ -109,81 +97,85 @@ body {
 
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-    body { background: #fff; color: #222; font-size: 11pt; line-height: 1.5; }
+    body { background: #fff; color: #222; font-size: 10pt; line-height: 1.4; }
 
     .container { max-width: 100%; padding: 0; }
-    .no-print { display: none !important; }
+    .no-print, .no-print * { display: none !important; }
 
-    /* ── 页头 ── */
     .print-header {
         display: block !important;
         text-align: center;
-        margin-bottom: 24pt;
-        padding-bottom: 16pt;
-        border-bottom: 3px solid #1a56db;
+        margin-bottom: 20pt;
+        padding-bottom: 12pt;
+        border-bottom: 2px solid #2563eb;
     }
     .print-header h1 {
-        font-size: 22pt; font-weight: 700; color: #1a1a2e;
-        margin-bottom: 4pt; letter-spacing: 1pt;
+        font-size: 18pt; font-weight: 700; color: #1e3a5f;
+        margin-bottom: 4pt;
     }
     .print-header .print-sub {
-        font-size: 10pt; color: #555; margin-bottom: 2pt;
+        font-size: 9pt; color: #555; margin-bottom: 2pt;
     }
     .print-header .print-meta {
-        font-size: 9pt; color: #888; margin-top: 4pt;
+        font-size: 8pt; color: #888; margin-top: 2pt;
     }
 
-    /* ── 统计条 ── */
     .count-badge {
         border: 1px solid #ccc; color: #333; background: #f8f9fa;
-        font-size: 10pt; font-weight: 600; display: inline-block;
-        padding: 4pt 14pt; border-radius: 4pt; margin-bottom: 16pt;
+        font-size: 9pt; padding: 3pt 10pt; margin-bottom: 12pt;
+        border-radius: 3pt; font-weight: 600;
     }
 
-    /* ── 卡片（PDF 表格风格） ── */
     .card {
-        background: #fff; border: 1px solid #d0d0d0;
-        border-left: 4px solid #1a56db;
-        border-radius: 0;
-        padding: 10pt 12pt;
-        margin-bottom: 8pt;
+        background: #fff;
+        border-bottom: 1px solid #e8e8e8;
+        padding: 8pt 10pt;
         break-inside: avoid;
         display: flex; align-items: flex-start;
     }
-    .card:hover { border-color: #d0d0d0; }
+    .card:first-of-type {
+        border-top: 1px solid #2563eb;
+    }
     .card-info { flex: 1; }
     .card-name {
-        font-size: 12pt; font-weight: 700; color: #1a1a2e; margin-bottom: 3pt;
+        font-size: 11pt; font-weight: 700; color: #1e3a5f; margin-bottom: 2pt;
     }
-    .card-detail { font-size: 9pt; color: #555; line-height: 1.6; }
+    .card-detail { font-size: 8.5pt; color: #555; line-height: 1.5; }
     .card-detail-row {
-        display: flex; flex-wrap: wrap; gap: 4pt 20pt; margin-top: 1pt;
+        display: flex; flex-wrap: wrap; gap: 3pt 16pt; margin-top: 1pt;
     }
     .card-detail-row .label { color: #888; }
     .card-detail-row .value { color: #222; font-weight: 600; }
 
-    .match-reason { margin-top: 6pt; }
+    .match-reason { margin-top: 4pt; }
     .match-tag {
-        display: inline-block; padding: 1pt 8pt; border-radius: 3pt;
-        font-size: 8pt; font-weight: 600; margin-right: 4pt;
+        display: inline-block; padding: 1pt 6pt; border-radius: 2pt;
+        font-size: 7.5pt; font-weight: 600; margin-right: 3pt;
     }
     .match-tag.product { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
     .match-tag.executive { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
-    /* ── 提交成功页面额外信息 ── */
-    .success-msg { padding: 0 0 16pt 0 !important; }
-    .success-msg .icon { display: none; }
-    .success-msg h2 { font-size: 14pt; color: #1a56db; margin-bottom: 2pt; }
-    .success-msg p { font-size: 10pt; color: #555; margin-bottom: 0; }
+    .success-msg { display: none !important; }
 
-    /* ── 页脚 ── */
-    .footer { color: #bbb; font-size: 8pt; }
+    .card [style*="flex-shrink:0"] {
+        font-size: 8pt !important;
+        color: #1e3a5f !important;
+        background: #f0f4ff;
+        padding: 1pt 6pt;
+        border-radius: 2pt;
+        border: 1px solid #d0d7ff;
+    }
+
+    .footer { color: #bbb; font-size: 7pt; }
 }
 .print-header { display: none; }
 </style>
 </head>
 <body>
 <div class="container" id="app">
+    <div class="no-print" style="display:flex;gap:0.8rem;justify-content:center;margin-bottom:0.5rem;">
+        <a id="back-home" href="http://localhost:8501/" target="_top" style="color:#93c5fd;text-decoration:none;font-size:13px;padding:5px 14px;border:1px solid #475569;border-radius:4px;">← 返回主页</a>
+    </div>
     <div class="header no-print">
         <h1>确认拜访计划</h1>
         <p>检查待拜访清单，填写计划信息后提交</p>
@@ -196,6 +188,10 @@ body {
 <script>
 const API_BASE = window.location.origin;
 const TOKEN = new URLSearchParams(location.search).get('token') || '';
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('back-home');
+    if (el && TOKEN) el.href += '?token=' + encodeURIComponent(TOKEN);
+});
 const URL_PARAMS = new URLSearchParams(location.search);
 const PRODUCT_KEYWORDS = (URL_PARAMS.get('product_name_query') || '').split(/[,\s]+/).filter(Boolean);
 const EXEC_KEYWORDS = (URL_PARAMS.get('executive_query') || '').split(/[,\s]+/).filter(Boolean);
@@ -279,9 +275,13 @@ function render() {
 
     cartItems.forEach(item => {
         const matchHtml = getMatchHtml(item.reg_num);
-        html += `<div class="card">
+        const starred = item.starred === true || item.starred === 'true';
+        html += `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
             <div class="card-info">
-                <div class="card-name">${item.org_name}</div>
+                <div class="card-name">
+                    <span class="star-toggle no-print" onclick="toggleStar(${item.id})" style="cursor:pointer;${starred ? 'color:#fbbf24;' : 'color:#64748b;'}font-size:16px;margin-right:4px;">${starred ? '⭐' : '☆'}</span>
+                    ${item.org_name}
+                </div>
                 <div class="card-detail">${item.reg_num}</div>
                 <div class="card-detail-row">
                     <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>
@@ -337,6 +337,23 @@ async function removeItem(id) {
     }
 }
 
+async function toggleStar(id) {
+    try {
+        const resp = await fetch(`${API_BASE}/api/cart/toggle-star/${id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        if ((await resp.json()).success) {
+            // 更新本地 cartItems 中的 starred 状态
+            const item = cartItems.find(i => i.id === id);
+            if (item) item.starred = !item.starred;
+            render();
+        }
+    } catch (e) {
+        alert('操作失败：' + e.message);
+    }
+}
+
 async function submitPlan() {
     const date = document.getElementById('plan-date').value;
     const visitor = document.getElementById('plan-visitor').value.trim();
@@ -364,9 +381,10 @@ async function submitPlan() {
             let plansHtml = savedItems.map(item => {
                 const plan = planRegNums[item.reg_num] || {};
                 const matchHtml = getMatchHtml(item.reg_num);
-                return `<div class="card">
+                const starred = item.starred === true || item.starred === 'true';
+                return `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
                     <div class="card-info">
-                        <div class="card-name">${item.org_name}</div>
+                        <div class="card-name">${starred ? '<span style="color:#fbbf24;">⭐ </span>' : ''}${item.org_name}</div>
                         <div class="card-detail">${item.reg_num}</div>
                         <div class="card-detail-row">
                             <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>
@@ -386,15 +404,16 @@ async function submitPlan() {
                     <div class="print-sub">已提交 · 拜访人 ${visitor} · 计划日期 ${date}</div>
                     <div class="print-meta">共 ${result.count} 条拜访计划 · 生成时间 ${new Date().toLocaleString('zh-CN')}</div>
                 </div>
-                <div style="margin-bottom:1.5rem;">
+                <div class="no-print" style="margin-bottom:1.5rem;">
                     <div class="success-msg" style="padding:1.5rem 1rem;">
                         <div class="icon" style="font-size:36px;">🎉</div>
                         <h2 style="font-size:1.3rem;">提交成功！</h2>
                         <p>已生成 ${result.count} 条拜访计划</p>
                     </div>
-                    ${plansHtml}
                 </div>
+                ${plansHtml}
                 <div class="btn-row no-print">
+                    <button class="btn btn-secondary" onclick="window.open('http://localhost:8501/?token=${TOKEN}','_blank')">← 返回主页</button>
                     <button class="btn btn-primary" onclick="window.open('/plans?token=${TOKEN}','_blank')">查看全部计划</button>
                     <button class="btn btn-pdf" onclick="window.print()">📄 导出 PDF</button>
                 </div>

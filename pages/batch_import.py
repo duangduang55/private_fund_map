@@ -1,9 +1,10 @@
 """批量补录已拜访（Phase 3 — 搜索+反馈表单）"""
 
+import os
 import streamlit as st
 import requests
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8100")
 
 # ── Session 初始化 ──
 if "batch_import_items" not in st.session_state:
