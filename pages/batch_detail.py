@@ -1,12 +1,14 @@
 """拜访批次详情页面 — 查看某批次下的所有机构"""
 
 import os
+import urllib.parse
 import streamlit as st
 import requests
 
 st.set_page_config(page_title="批次详情", layout="wide", initial_sidebar_state="collapsed")
 
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8100")
+STREAMLIT_BASE = os.environ.get("STREAMLIT_BASE_URL", "http://localhost:8501")
 
 
 def init_auth():
@@ -88,31 +90,60 @@ def main():
     )
 
     # 操作 / 按钮
-    col1, col2, col3, _ = st.columns([1, 1, 1, 4])
+    col1, col2, col3, col4, _ = st.columns([1, 1, 1, 1.5, 3.5])
     with col1:
         if st.button("← 返回主页", use_container_width=True):
             st.switch_page("app.py")
     with col2:
-        print_url = f"{API_BASE}/batch-detail-print?token={token}&batch_id={batch_id}"
+        print_url = f"{API_BASE}/batch-detail-print?token={token}&amp;batch_id={batch_id}"
         st.markdown(
             f'<a href="{print_url}" target="_blank"><button style="width:100%;padding:0.4rem 1rem;background:#2563eb;color:white;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">📄 导出 PDF</button></a>',
             unsafe_allow_html=True,
         )
     with col3:
-        map_url = f"{API_BASE}/batch-map?token={token}&batch_id={batch_id}"
+        map_url = f"{API_BASE}/batch-map?token={token}&amp;batch_id={batch_id}"
         st.markdown(
             f'<a href="{map_url}" target="_blank"><button style="width:100%;padding:0.4rem 1rem;background:transparent;color:#f87171;border:1px solid rgba(248,113,113,0.4);border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">🗺️ 在地图上查看</button></a>',
             unsafe_allow_html=True,
         )
+    with col4:
+        if st.button("🗑️ 删除此批拜访计划", use_container_width=True):
+            st.session_state.confirm_del_batch = True
+
+    if st.session_state.get("confirm_del_batch"):
+        st.warning("⚠️ 确定要删除此批次所有拜访计划吗？关联的反馈记录也将一并删除，此操作不可撤销。")
+        dc1, dc2 = st.columns([1, 1])
+        with dc1:
+            if st.button("确认删除", type="primary", use_container_width=True):
+                try:
+                    resp = requests.delete(
+                        f"{API_BASE}/api/plans/batch/{batch_id}",
+                        headers=headers,
+                        timeout=10,
+                    )
+                    if resp.ok:
+                        st.success("批次删除成功")
+                        st.session_state.confirm_del_batch = False
+                        st.rerun()
+                    else:
+                        st.error("删除失败")
+                except Exception as e:
+                    st.error(f"删除失败：{e}")
+        with dc2:
+            if st.button("取消", use_container_width=True):
+                st.session_state.confirm_del_batch = False
+                st.rerun()
 
     # 机构明细表格
     status_map = {"pending": "⏳ 待拜访", "completed": "✅ 已完成", "cancelled": "❌ 已取消"}
+    redirect_param = urllib.parse.quote(f"{STREAMLIT_BASE}/batch_detail?batch_id={batch_id}&token={token}", safe="")
     rows = []
     for p in plans:
         reg_num = p.get("reg_num", "")
         has_feedback = p.get("feedback_id") is not None
         is_starred = p.get("starred", False) in (True, "true", "t")
         org_display = f"⭐ {p.get('org_name', '')}" if is_starred else p.get("org_name", "")
+        plan_id = p["id"]
         rows.append({
             "机构名称": org_display,
             "登记编号": reg_num,
@@ -121,8 +152,9 @@ def main():
             "办公地址": p.get("office_address", ""),
             "状态": status_map.get(p.get("status", ""), p.get("status", "")),
             "反馈": "✅ 已完成" if has_feedback else "—",
-            "操作": f"{API_BASE}/feedback?token={token}&plan_id={p['id']}" if not has_feedback else "",
+            "操作": f"{API_BASE}/feedback?token={token}&plan_id={plan_id}" if not has_feedback else "",
             "查看": f"{API_BASE}/detail?token={token}&reg_num={reg_num}",
+            "删除": f"{API_BASE}/confirm-del-plan?plan_id={plan_id}&token={token}&batch_id={batch_id}&redirect={redirect_param}",
         })
 
     st.dataframe(
@@ -139,6 +171,7 @@ def main():
             "反馈": st.column_config.TextColumn("反馈", width="small"),
             "操作": st.column_config.LinkColumn("操作", display_text="✏️ 填写反馈"),
             "查看": st.column_config.LinkColumn("查看", display_text="查看"),
+            "删除": st.column_config.LinkColumn("删除", display_text="🗑️ 删除"),
         },
     )
 

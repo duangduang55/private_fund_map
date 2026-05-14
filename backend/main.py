@@ -42,6 +42,8 @@ from backend.db_fundmap import (
     auto_expire_plans,
     batch_import_visited,
     batch_import_with_feedback,
+    delete_plan,
+    delete_plans_by_batch,
     get_user_tags,
     get_all_visit_records,
     get_fund_tags,
@@ -296,6 +298,16 @@ def batch_detail_print_page(token: str = Query(None), batch_id: str = Query(""))
     return HTMLResponse(html)
 
 
+CONFIRM_DEL_PLAN_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "confirm_del_plan.html")
+
+@app.get("/confirm-del-plan", response_class=HTMLResponse)
+def confirm_del_plan_page(token: str = Query(None), plan_id: str = Query(""), batch_id: str = Query(""), redirect: str = Query("")):
+    """删除确认页面"""
+    with open(CONFIRM_DEL_PLAN_HTML_PATH, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(html)
+
+
 @app.get("/confirm", response_class=HTMLResponse)
 def confirm_page(token: str = Query(None)):
     """确认拜访计划页面"""
@@ -359,6 +371,22 @@ def api_toggle_plan_star(plan_id: int, user: dict = Depends(get_current_user)):
 def api_unstar_plan(plan_id: int, user: dict = Depends(get_current_user)):
     ok = set_plan_star(plan_id, user["id"], False)
     return {"success": ok}
+
+
+# ── 删除拜访计划 ──
+
+@app.delete("/api/plans/{plan_id}")
+def api_delete_plan(plan_id: int, user: dict = Depends(get_current_user)):
+    ok = delete_plan(plan_id, user["id"], user["role"])
+    if not ok:
+        raise HTTPException(status_code=404, detail="未找到该记录或无权限删除")
+    return {"success": True}
+
+
+@app.delete("/api/plans/batch/{batch_id}")
+def api_delete_batch(batch_id: str, user: dict = Depends(get_current_user)):
+    count = delete_plans_by_batch(batch_id, user["id"], user["role"])
+    return {"success": True, "deleted_count": count}
 
 
 # ── 命中原因 API ──────────────────────────────────────────────

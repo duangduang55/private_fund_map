@@ -582,6 +582,51 @@ def batch_import_with_feedback(user_id: int, records: list[dict]) -> int:
         conn.close()
 
 
+# ── 删除拜访计划 ──
+
+def delete_plan(plan_id: int, user_id: int, role: str) -> bool:
+    """删除单个拜访计划及关联反馈。admin 可删任意记录，member 仅删自己的。"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM visit_feedback WHERE visit_plan_id = %s", (plan_id,))
+            if role == "admin":
+                cur.execute("DELETE FROM visit_plans WHERE id = %s", (plan_id,))
+            else:
+                cur.execute("DELETE FROM visit_plans WHERE id = %s AND user_id = %s", (plan_id, user_id))
+            conn.commit()
+            return cur.rowcount > 0
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
+def delete_plans_by_batch(batch_id: str, user_id: int, role: str) -> int:
+    """删除某批次下的所有计划及关联反馈，返回删除条数。"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM visit_feedback WHERE visit_plan_id IN (SELECT id FROM visit_plans WHERE batch_id = %s)"
+                if role == "admin" else
+                "DELETE FROM visit_feedback WHERE visit_plan_id IN (SELECT id FROM visit_plans WHERE batch_id = %s AND user_id = %s)",
+                (batch_id,) if role == "admin" else (batch_id, user_id),
+            )
+            if role == "admin":
+                cur.execute("DELETE FROM visit_plans WHERE batch_id = %s", (batch_id,))
+            else:
+                cur.execute("DELETE FROM visit_plans WHERE batch_id = %s AND user_id = %s", (batch_id, user_id))
+            conn.commit()
+            return cur.rowcount
+    except Exception:
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
+
+
 def get_user_tags(user_id: int) -> list[str]:
     """获取用户历史反馈中使用过的所有标签（去重、排序）"""
     conn = get_fm_conn()
