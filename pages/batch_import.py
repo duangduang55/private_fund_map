@@ -6,14 +6,14 @@ import requests
 
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8100")
 
-# ── Session 初始化 ──
-if "batch_import_items" not in st.session_state:
-    st.session_state.batch_import_items = []
-if "search_results" not in st.session_state:
-    st.session_state.search_results = []
-
 
 def show_batch_import_page():
+    # 确保 session state 已初始化（放在函数内，避免 Streamlit 模块缓存问题）
+    if "batch_import_items" not in st.session_state:
+        st.session_state.batch_import_items = []
+    if "search_results" not in st.session_state:
+        st.session_state.search_results = []
+
     headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
     st.markdown('<div class="filter-card">', unsafe_allow_html=True)
