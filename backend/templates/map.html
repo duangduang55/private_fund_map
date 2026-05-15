@@ -6,9 +6,9 @@
 <title>私募基金管理人分布地图</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="/static/style.css">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f1f5f9; }
+/* ── Map-specific: search, legend, cart panel, popup ── */
 #map { width: 100vw; height: 100vh; }
 
 /* ── 搜索框 ── */
@@ -214,7 +214,7 @@ body.cart-open .cart-float-btn { right: 420px; }
 
 <!-- 搜索框 -->
 <div class="search-box">
-    <input type="text" id="search-input" placeholder="🔍 搜索机构名称..." autocomplete="off">
+    <input type="text" id="search-input" placeholder="搜索机构名称..." autocomplete="off">
     <div class="search-results" id="search-results"></div>
 </div>
 
@@ -238,14 +238,14 @@ body.cart-open .cart-float-btn { right: 420px; }
 
 <!-- 侧滑购物车面板 -->
 <button class="cart-float-btn" id="cart-float-btn" onclick="toggleCartPanel()" title="打开待拜访清单">
-    🛒<span class="cart-float-badge" id="cart-float-badge">0</span>
+    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="/static/icons.svg#icon-cart"/></svg><span class="cart-float-badge" id="cart-float-badge">0</span>
 </button>
 
 <div class="cart-panel" id="cart-panel">
     <div class="cart-panel-header">
         <h2>待拜访清单 <span class="cart-count-badge" id="cart-count">0</span></h2>
         <div style="display:flex;align-items:center;gap:8px;">
-            <a href="/plans?token={{ token }}" target="_blank" style="color:#6b7280;font-size:12px;text-decoration:none;padding:2px 8px;border-radius:4px;border:1px solid rgba(0,212,170,0.15);">📋 计划</a>
+            <a href="/plans?token={{ token }}" target="_blank" style="color:#6b7280;font-size:12px;text-decoration:none;padding:2px 8px;border-radius:4px;border:1px solid rgba(0,212,170,0.15);"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 计划</a>
             <button class="cart-close-btn" id="cart-close-btn">✕</button>
         </div>
     </div>
@@ -343,12 +343,12 @@ function renderMarkers() {
                    </svg>
                    </div>`;
         } else if (isPending) {
-            // 待拜访：AUM颜色圆圈 + 沙漏图标 ⏳
+            // 待拜访：AUM颜色圆圈 + 时钟图标
             html = `<div style="width:${size}px;height:${size}px;background:${baseColor};
                    border-radius:50%;border:3px solid rgba(255,255,255,0.4);
                    box-shadow:0 3px 8px rgba(0,0,0,0.4);
                    display:flex;align-items:center;justify-content:center;">
-                   <span style="font-size:15px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">⏳</span>
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
                    </div>`;
         } else {
             // 未拜访：纯AUM颜色圆圈
@@ -404,8 +404,8 @@ function onMarkerClick(marker) {
     const historyId = 'vh-' + (fund.reg_num || '').replace(/[^a-zA-Z0-9]/g, '');
 
     let statusTag = '';
-    if (isCompleted) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#34d399;color:#fff;margin-left:8px;">✅ 已拜访</span>';
-    else if (isPending) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#FBBF24;color:#1a1a2e;margin-left:8px;">⏳ 待拜访</span>';
+    if (isCompleted) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#34d399;color:#fff;margin-left:8px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-check"/></svg> 已拜访</span>';
+    else if (isPending) statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#FBBF24;color:#1a1a2e;margin-left:8px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-clock"/></svg> 待拜访</span>';
     else statusTag = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#6b7280;color:#fff;margin-left:8px;">未拜访</span>';
 
     let html = `<div class="popup-content">
@@ -417,7 +417,7 @@ function onMarkerClick(marker) {
 
     // 拜访记录占位（异步加载）
     if (isCompleted || isPending) {
-        html += `<div class="popup-visit-info" id="${historyId}" style="padding:6px 10px;font-size:12px;">📋 加载拜访记录中...</div>`;
+        html += `<div class="popup-visit-info" id="${historyId}" style="padding:6px 10px;font-size:12px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:3px;"><use href="/static/icons.svg#icon-list"/></svg> 加载拜访记录中...</div>`;
     }
 
     const inCart = cartRegNums.has(fund.reg_num);
@@ -441,13 +441,13 @@ function onMarkerClick(marker) {
                 const el = document.getElementById(historyId);
                 if (!el) return;
                 if (records.length === 0) {
-                    el.innerHTML = isCompleted ? '✅ 此私募已被拜访过' : '⏳ 此私募在待拜访计划中';
+                    el.innerHTML = isCompleted ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-check"/></svg> 此私募已被拜访过' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-clock"/></svg> 此私募在待拜访计划中';
                     return;
                 }
                 el.style.maxHeight = '220px';
                 el.style.overflowY = 'auto';
                 el.innerHTML = records.map((r, i) => {
-                    const icon = r.status === 'completed' ? '✅' : '⏳';
+                    const icon = r.status === 'completed' ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-check"/></svg>' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-clock"/></svg>';
                     const resultText = r.visit_status ? ` | ${r.visit_status}` : '';
                     const s = r.summary ? `<br><span style="color:#9ca3af;font-size:11px;">${r.summary}</span>` : '';
                     return `<div style="padding:${i === 0 ? '0 0 5px' : '5px 0'};${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.1);' : ''}font-size:12px;color:#856404;line-height:1.5;">
@@ -457,7 +457,7 @@ function onMarkerClick(marker) {
             })
             .catch(() => {
                 const el = document.getElementById(historyId);
-                if (el) el.innerHTML = isCompleted ? '✅ 此私募已被拜访过' : '⏳ 此私募在待拜访计划中';
+                if (el) el.innerHTML = isCompleted ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-check"/></svg> 此私募已被拜访过' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-clock"/></svg> 此私募在待拜访计划中';
             });
     }
 }
@@ -520,7 +520,7 @@ function renderCart() {
             <div class="cart-item-header">
                 <div>
                     <div class="cart-item-name">
-                        <span class="cart-star-btn" onclick="toggleCartStar(${item.id})" style="cursor:pointer;${item.starred ? 'color:#fbbf24;' : 'color:#64748b;'}">${item.starred ? '⭐' : '☆'}</span>
+                        <span class="cart-star-btn" onclick="toggleCartStar(${item.id})" style="cursor:pointer;${item.starred ? 'color:#fbbf24;' : 'color:#64748b;'}">${item.starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star"/></svg>' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star-outline"/></svg>'}</span>
                         ${item.org_name}
                     </div>
                     <div class="cart-item-detail">规模：${item.org_aum || '-'} | 基金数：${item.fund_count || '-'}</div>

@@ -4,177 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>确认拜访计划</title>
+<link rel="stylesheet" href="/static/style.css">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0f172a; color: #f1f5f9; min-height: 100vh;
-}
-.container { max-width: 750px; margin: 0 auto; padding: 2rem 1.5rem; }
-.header {
-    text-align: center; margin-bottom: 2rem;
-    display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
-}
-.header h1 {
-    font-size: 1.6rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.3rem; width: 100%;
-}
-.header p { color: #64748b; font-size: 0.9rem; width: 100%; }
-.count-badge {
-    display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;
-    background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 0.85rem;
-    margin-bottom: 1rem;
-}
-.btn-export-pdf {
-    display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;
-    background: transparent; border: 1px solid #dc2626; color: #f87171; font-size: 0.85rem;
-    cursor: pointer; text-decoration: none;
-}
-.btn-export-pdf:hover { background: rgba(220,38,38,0.08); }
-.card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-    padding: 1rem 1.2rem; margin-bottom: 0.6rem;
-}
+/* Page-specific overrides */
+.header { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+.header h1, .header p { width: 100%; }
+.container { max-width: 750px; }
+
 .card-info { flex: 1; }
-.card-name { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
-.card-detail { font-size: 12px; color: #94a3b8; line-height: 1.6; }
-.card-detail .label { color: #64748b; }
-.card-detail-row { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 2px; }
-.card-detail-row .label { color: #64748b; }
-.card-detail-row .value { color: #e2e8f0; font-weight: 600; }
-.match-reason { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
-.match-tag {
-    display: inline-block; padding: 2px 10px; border-radius: 4px;
-    font-size: 11px; font-weight: 500;
-}
-.match-tag.product { background: rgba(37,99,235,0.12); color: #93c5fd; border: 1px solid rgba(37,99,235,0.3); }
-.match-tag.executive { background: rgba(217,119,6,0.12); color: #fcd34d; border: 1px solid rgba(217,119,6,0.3); }
-.match-tag.none { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
-
-.empty-state {
-    text-align: center; padding: 3rem 1rem; color: #64748b;
-}
 .empty-state p { font-size: 16px; }
-.form-row {
-    display: flex; gap: 1rem; margin: 1.5rem 0;
-}
-.form-group { flex: 1; }
-.form-group label {
-    display: block; font-size: 0.8rem; color: #94a3b8; font-weight: 500; margin-bottom: 0.4rem;
-}
-.form-group input {
-    width: 100%; padding: 10px 14px; border-radius: 6px;
-    border: 1px solid #475569; background: rgba(255,255,255,0.04);
-    color: #f1f5f9; font-size: 14px; outline: none;
-}
-.form-group input:focus { border-color: #3b82f6; }
-.btn-row { display: flex; gap: 1rem; margin-top: 0.5rem; }
-.btn {
-    flex: 1; padding: 12px; border: none; border-radius: 6px;
-    font-size: 15px; font-weight: 500; cursor: pointer; text-align: center;
-}
-.btn-primary { background: #2563eb; color: white; }
-.btn-primary:hover { background: #1d4ed8; }
-.btn-primary:disabled { background: #475569; cursor: not-allowed; }
-.btn-secondary {
-    background: transparent; color: #3b82f6; border: 1px solid #3b82f6;
-}
-.btn-secondary:hover { background: rgba(59,130,246,0.08); }
-.btn-pdf {
-    background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4);
-}
-.btn-pdf:hover { background: rgba(248,113,113,0.08); }
-.success-msg {
-    text-align: center; padding: 3rem 1rem;
-}
-.success-msg .icon { font-size: 48px; margin-bottom: 1rem; }
-.success-msg h2 { color: #f1f5f9; margin-bottom: 0.5rem; }
-.success-msg p { color: #94a3b8; margin-bottom: 1.5rem; }
-.footer { text-align: center; color: #475569; font-size: 0.75rem; padding: 2rem 0; }
 
-/* ── Print / PDF ── */
 @media print {
-    @page { margin: 0.6in 0.5in; size: A4; }
-
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-    body { background: #fff; color: #222; font-size: 10pt; line-height: 1.4; }
-
-    .container { max-width: 100%; padding: 0; }
-    .no-print, .no-print * { display: none !important; }
-
-    .print-header {
-        display: block !important;
-        text-align: center;
-        margin-bottom: 20pt;
-        padding-bottom: 12pt;
-        border-bottom: 2px solid #2563eb;
-    }
-    .print-header h1 {
-        font-size: 18pt; font-weight: 700; color: #1e3a5f;
-        margin-bottom: 4pt;
-    }
-    .print-header .print-sub {
-        font-size: 9pt; color: #555; margin-bottom: 2pt;
-    }
-    .print-header .print-meta {
-        font-size: 8pt; color: #888; margin-top: 2pt;
-    }
-
-    .count-badge {
-        border: 1px solid #ccc; color: #333; background: #f8f9fa;
-        font-size: 9pt; padding: 3pt 10pt; margin-bottom: 12pt;
-        border-radius: 3pt; font-weight: 600;
-    }
-
-    .card {
-        background: #fff;
-        border-bottom: 1px solid #e8e8e8;
-        padding: 8pt 10pt;
-        break-inside: avoid;
-        display: flex; align-items: flex-start;
-    }
-    .card:first-of-type {
-        border-top: 1px solid #2563eb;
-    }
-    .card-info { flex: 1; }
-    .card-name {
-        font-size: 11pt; font-weight: 700; color: #1e3a5f; margin-bottom: 2pt;
-    }
-    .card-detail { font-size: 8.5pt; color: #555; line-height: 1.5; }
-    .card-detail-row {
-        display: flex; flex-wrap: wrap; gap: 3pt 16pt; margin-top: 1pt;
-    }
-    .card-detail-row .label { color: #888; }
-    .card-detail-row .value { color: #222; font-weight: 600; }
-
-    .match-reason { margin-top: 4pt; }
-    .match-tag {
-        display: inline-block; padding: 1pt 6pt; border-radius: 2pt;
-        font-size: 7.5pt; font-weight: 600; margin-right: 3pt;
-    }
-    .match-tag.product { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-    .match-tag.executive { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-
-    .success-msg { display: none !important; }
-
-    .card [style*="flex-shrink:0"] {
-        font-size: 8pt !important;
-        color: #1e3a5f !important;
-        background: #f0f4ff;
-        padding: 1pt 6pt;
-        border-radius: 2pt;
-        border: 1px solid #d0d7ff;
-    }
-
-    .footer { color: #bbb; font-size: 7pt; }
+  .card { display: flex; align-items: flex-start; }
+  .card:first-of-type { border-top: 1px solid #2563eb; }
 }
-.print-header { display: none; }
 </style>
 </head>
 <body>
 <div class="container" id="app">
     <div class="no-print" style="display:flex;gap:0.8rem;justify-content:center;margin-bottom:0.5rem;">
-        <a id="back-home" href="http://localhost:8501/" target="_top" style="color:#93c5fd;text-decoration:none;font-size:13px;padding:5px 14px;border:1px solid #475569;border-radius:4px;">← 返回主页</a>
+        <a id="back-home" href="http://localhost:8501/" target="_top" style="color:#93c5fd;text-decoration:none;font-size:13px;padding:5px 14px;border:1px solid #475569;border-radius:4px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-arrow-left"/></svg> 返回主页</a>
     </div>
     <div class="header no-print">
         <h1>确认拜访计划</h1>
@@ -251,7 +100,7 @@ function render() {
     const el = document.getElementById('content');
     if (cartItems.length === 0) {
         el.innerHTML = `<div class="empty-state">
-            <p style="font-size:32px;margin-bottom:12px;">📋</p>
+            <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#64748b;margin-bottom:12px;"><use href="/static/icons.svg#icon-list"/></svg>
             <p>待拜访清单为空</p>
             <p style="font-size:13px;margin-top:8px;color:#6b7280;">请在地图上添加私募到待拜访清单</p>
             <button class="btn btn-primary no-print" style="margin-top:16px;max-width:200px;" onclick="window.close()">关闭页面</button>
@@ -263,7 +112,7 @@ function render() {
 
     let html = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem;">
         <span class="count-badge">共 ${cartItems.length} 条</span>
-        <button class="btn-export-pdf no-print" onclick="exportPdf()">📄 导出 PDF</button>
+        <button class="btn-export-pdf no-print" onclick="exportPdf()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-document"/></svg> 导出 PDF</button>
     </div>`;
 
     // 打印页头（打印时显示）
@@ -279,7 +128,9 @@ function render() {
         html += `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
             <div class="card-info">
                 <div class="card-name">
-                    <span class="star-toggle no-print" onclick="toggleStar(${item.id})" style="cursor:pointer;${starred ? 'color:#fbbf24;' : 'color:#64748b;'}font-size:16px;margin-right:4px;">${starred ? '⭐' : '☆'}</span>
+                    <span class="star-toggle no-print" onclick="toggleStar(${item.id})" style="cursor:pointer;${starred ? 'color:#fbbf24;' : 'color:#64748b;'}font-size:16px;margin-right:4px;">${starred
+                      ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg>'
+                      : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-star-outline"/></svg>'}</span>
                     ${item.org_name}
                 </div>
                 <div class="card-detail">${item.reg_num}</div>
@@ -290,7 +141,7 @@ function render() {
                 <div class="card-detail"><span class="label">办公地址</span> <span class="value">${item.office_address || '-'}</span></div>
                 ${matchHtml}
             </div>
-            <button class="card-remove no-print" onclick="removeItem(${item.id})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:6px 10px;border-radius:6px;flex-shrink:0;">🗑️ 删除</button>
+            <button class="card-remove no-print" onclick="removeItem(${item.id})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:6px 10px;border-radius:6px;flex-shrink:0;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-trash"/></svg> 删除</button>
         </div>`;
     });
 
@@ -307,9 +158,9 @@ function render() {
             </div>
         </div>
         <div class="btn-row">
-            <button class="btn btn-secondary" onclick="window.close()">返回地图</button>
-            <button class="btn btn-pdf" onclick="exportPdf()">📄 导出 PDF</button>
-            <button class="btn btn-primary" id="submit-btn" onclick="submitPlan()">✅ 确认提交</button>
+            <button class="btn btn-secondary" onclick="window.close()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-map-pin"/></svg> 返回地图</button>
+            <button class="btn btn-pdf" onclick="exportPdf()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-document"/></svg> 导出 PDF</button>
+            <button class="btn btn-primary" id="submit-btn" onclick="submitPlan()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 确认提交</button>
         </div>
     </div>`;
 
@@ -384,7 +235,7 @@ async function submitPlan() {
                 const starred = item.starred === true || item.starred === 'true';
                 return `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
                     <div class="card-info">
-                        <div class="card-name">${starred ? '<span style="color:#fbbf24;">⭐ </span>' : ''}${item.org_name}</div>
+                        <div class="card-name">${starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg> ' : ''}${item.org_name}</div>
                         <div class="card-detail">${item.reg_num}</div>
                         <div class="card-detail-row">
                             <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>
@@ -394,7 +245,7 @@ async function submitPlan() {
                         ${matchHtml}
                         <div class="card-detail" style="margin-top:4pt;"><span class="label">计划拜访</span> <span class="value">${plan.planned_date || date} | ${plan.visitor_name || visitor}</span></div>
                     </div>
-                    <span style="color:#fbbf24;font-size:13px;flex-shrink:0;">⏳ 待拜访</span>
+                    <span style="color:#d97706;font-size:13px;flex-shrink:0;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> 待拜访</span>
                 </div>`;
             }).join('');
 
@@ -406,25 +257,25 @@ async function submitPlan() {
                 </div>
                 <div class="no-print" style="margin-bottom:1.5rem;">
                     <div class="success-msg" style="padding:1.5rem 1rem;">
-                        <div class="icon" style="font-size:36px;">🎉</div>
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#16a34a;width:36px;height:36px;margin-bottom:12px;"><use href="/static/icons.svg#icon-check-circle"/></svg>
                         <h2 style="font-size:1.3rem;">提交成功！</h2>
                         <p>已生成 ${result.count} 条拜访计划</p>
                     </div>
                 </div>
                 ${plansHtml}
                 <div class="btn-row no-print">
-                    <button class="btn btn-secondary" onclick="window.open('http://localhost:8501/?token=${TOKEN}','_blank')">← 返回主页</button>
-                    <button class="btn btn-primary" onclick="window.open('/plans?token=${TOKEN}','_blank')">查看全部计划</button>
-                    <button class="btn btn-pdf" onclick="window.print()">📄 导出 PDF</button>
+                    <button class="btn btn-secondary" onclick="window.open('http://localhost:8501/?token=${TOKEN}','_blank')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-arrow-left"/></svg> 返回主页</button>
+                    <button class="btn btn-primary" onclick="window.open('/plans?token=${TOKEN}','_blank')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 查看全部计划</button>
+                    <button class="btn btn-pdf" onclick="window.print()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-document"/></svg> 导出 PDF</button>
                 </div>
             `;
         } else {
             alert('提交失败');
-            btn.disabled = false; btn.textContent = '✅ 确认提交';
+            btn.disabled = false; btn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 确认提交';
         }
     } catch (e) {
         alert('提交失败：' + e.message);
-        btn.disabled = false; btn.textContent = '✅ 确认提交';
+        btn.disabled = false; btn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 确认提交';
     }
 }
 

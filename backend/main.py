@@ -3,6 +3,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
 import secrets
@@ -59,6 +60,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 静态文件（共享 CSS、图标等）
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "map.html")
 BATCH_MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "batch_map.html")

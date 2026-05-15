@@ -4,61 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>批次详情 - 导出PDF</title>
+<link rel="stylesheet" href="/static/style.css">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #0f172a; color: #f1f5f9; padding: 2rem;
-}
+/* Page-specific: print-detail layout */
+body { padding: 2rem; }
 .container { width: 100%; max-width: 100%; margin: 0 auto; }
-.header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 1.5rem; padding-bottom: 1rem;
-  border-bottom: 1px solid #334155;
-}
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #334155; }
 .header h1 { font-size: 1.4rem; font-weight: 600; }
 .header .meta { font-size: 13px; color: #94a3b8; }
-.btn-print {
-  padding: 8px 20px; background: #2563eb; color: white;
-  border: none; border-radius: 6px; font-size: 14px; cursor: pointer;
-}
+.btn-print { padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
 .btn-print:hover { background: #1d4ed8; }
-.info-bar {
-  display: flex; gap: 2rem; flex-wrap: wrap;
-  background: #1e293b; border: 1px solid #334155;
-  border-radius: 6px; padding: 1rem 1.5rem; margin-bottom: 1.5rem;
-}
+.info-bar { display: flex; gap: 2rem; flex-wrap: wrap; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
 .info-item .label { font-size: 11px; color: #94a3b8; }
 .info-item .value { font-size: 15px; color: #f1f5f9; font-weight: 600; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; table-layout: fixed; }
-thead th {
-  background: rgba(37,99,235,0.08); color: #93c5fd; font-size: 13px;
-  font-weight: 500; padding: 10px 12px; text-align: left;
-  border-bottom: 1px solid #334155;
-}
-tbody td {
-  padding: 10px 12px; border-bottom: 1px solid rgba(51,65,85,0.4);
-  font-size: 13px; color: #f1f5f9; word-break: break-word;
-}
-.status-pending { color: #d97706; }
-.status-completed { color: #16a34a; }
-.status-cancelled { color: #dc2626; }
-.footer {
-  text-align: center; color: #475569; font-size: 12px; padding: 1rem 0;
-}
 .star-icon { color: #fbbf24; margin-right: 3px; }
+table { table-layout: fixed; }
 @media print {
   body { background: white; color: #333; padding: 0.5in; }
-  .container { width: 100%; max-width: 100%; }
   .header { border-bottom-color: #ccc; }
-  .btn-print { display: none; }
+  .btn-print, .btn-print:hover { display: none !important; }
   .info-bar { background: #f5f5f5; border-color: #ddd; }
   .info-item .label { color: #888; }
   .info-item .value { color: #333; }
-  table { table-layout: fixed; width: 100%; }
   thead th { background: #e8e8e8; color: #555; }
-  tbody td { color: #333; border-bottom-color: #eee; }
-  .footer { color: #999; }
 }
 </style>
 </head>
@@ -66,10 +34,10 @@ tbody td {
 <div class="container">
   <div class="header">
     <div>
-      <h1>📋 拜访计划详情</h1>
+      <h1><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 拜访计划详情</h1>
       <div class="meta" id="meta-info">加载中...</div>
     </div>
-    <button class="btn-print" onclick="window.print()">🖨️ 打印 / 导出 PDF</button>
+    <button class="btn-print" onclick="window.print()"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-print"/></svg> 打印 / 导出 PDF</button>
   </div>
   <div id="content">
     <p style="color:#64748b;text-align:center;padding:3rem;">加载中...</p>
@@ -104,15 +72,21 @@ async function loadBatch() {
     document.getElementById('meta-info').textContent =
       `批次 ${BATCH_ID} · ${plannedDate} · 拜访人: ${visitorName} · 共 ${plans.length} 家机构`;
 
-    const statusMap = { 'pending': '⏳ 待拜访', 'completed': '✅ 已完成', 'cancelled': '❌ 已取消' };
+    const statusMap = {
+      'pending': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#d97706;vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> 待拜访',
+      'completed': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#16a34a;vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 已完成',
+      'cancelled': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#dc2626;vertical-align:middle"><use href="/static/icons.svg#icon-x"/></svg> 已取消',
+    };
     const statusClass = { 'pending': 'status-pending', 'completed': 'status-completed', 'cancelled': 'status-cancelled' };
 
     let rows = '';
     plans.forEach(p => {
       const isStarred = p.starred === true || p.starred === 'true' || p.starred === 't';
-      const starHtml = isStarred ? '<span class="star-icon">⭐</span>' : '';
+      const starHtml = isStarred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle;margin-right:2px"><use href="/static/icons.svg#icon-star"/></svg>' : '';
       const hasFeedback = p.feedback_id != null;
-      const feedbackHtml = hasFeedback ? '<span style="color:#16a34a;">✅ 已完成</span>' : '<span style="color:#d97706;">⏳ 待反馈</span>';
+      const feedbackHtml = hasFeedback
+        ? '<span style="color:#16a34a;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 已完成</span>'
+        : '<span style="color:#d97706;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> 待反馈</span>';
       rows += `<tr>
         <td>${starHtml}${p.org_name || '-'}</td>
         <td>${p.reg_num || '-'}</td>

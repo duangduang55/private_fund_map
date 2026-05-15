@@ -73,87 +73,71 @@ def do_logout():
     st.rerun()
 
 
-# ── 自定义 CSS（企业蓝灰专业风格） ──
-CUSTOM_CSS = """
+# ── 自定义 CSS（共享设计系统 + Streamlit 特有覆写） ──
+CUSTOM_CSS = f"""
 <style>
-.stApp { background: #0f172a; }
-.main-title {
-    font-size: 1.75rem; font-weight: 600; color: #f1f5f9;
+@import url("{API_BASE}/static/style.css");
+
+/* Streamlit 特有 */
+.stApp {{ background: var(--bg-primary); }}
+.main-title {{
+    font-size: 1.75rem; font-weight: 600; color: var(--text-primary);
     text-align: center; padding: 1.2rem 0 0.2rem 0;
-}
-.sub-title {
-    text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;
-}
-.filter-card {
-    background: #1e293b;
-    border: 1px solid #334155; border-radius: 6px;
-    padding: 1.2rem 1.5rem; margin-bottom: 1rem;
-}
-.filter-label {
-    color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem;
-}
-.divider {
-    height: 1px; background: #334155; margin: 0.8rem 0 1.2rem 0;
-}
-.stats-badge {
-    display: inline-block; background: #1e293b;
-    border: 1px solid #334155; border-radius: 4px;
-    padding: 0.25rem 0.75rem; color: #f1f5f9; font-size: 0.85rem;
-}
-div.stButton > button {
-    background: #2563eb !important;
+}}
+.sub-title {{
+    text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;
+}}
+.filter-label {{
+    color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem;
+}}
+
+/* Streamlit 组件覆盖 */
+div.stButton > button {{
+    background: var(--accent) !important;
     color: white !important; font-weight: 500 !important;
-    border: none !important; border-radius: 6px !important;
+    border: none !important; border-radius: var(--radius-md) !important;
     padding: 0.4rem 1.5rem !important;
-}
-div.stButton > button:hover {
-    background: #1d4ed8 !important;
-}
-.stSelectbox label, .stMultiSelect label, .stTextInput label, .stCheckbox label {
-    color: #94a3b8 !important; font-size: 0.8rem !important;
-}
-.footer { text-align: center; color: #475569; font-size: 0.75rem; padding: 2rem 0 0.5rem 0; }
-.user-info {
+}}
+div.stButton > button:hover {{
+    background: var(--accent-hover) !important;
+}}
+.stSelectbox label, .stMultiSelect label, .stTextInput label, .stCheckbox label {{
+    color: var(--text-secondary) !important; font-size: 0.8rem !important;
+}}
+section[data-testid="stSidebar"] {{ display: none !important; }}
+
+/* 用户信息浮标 */
+.user-info {{
     position: fixed; top: 12px; right: 20px; z-index: 999;
-    background: #1e293b; border: 1px solid #334155;
-    border-radius: 6px; padding: 6px 14px; font-size: 13px; color: #f1f5f9;
+    background: var(--bg-secondary); border: 1px solid var(--border-default);
+    border-radius: var(--radius-md); padding: 6px 14px; font-size: 13px; color: var(--text-primary);
     display: flex; align-items: center; gap: 12px;
-}
-.user-info .role-tag {
-    font-size: 11px; padding: 1px 8px; border-radius: 4px;
-    background: #1e3a5f; color: #93c5fd;
-}
-.stat-card {
-    background: #1e293b;
-    border: 1px solid #334155; border-radius: 6px;
-    padding: 0.8rem 1rem; text-align: center;
-}
-.stat-card .num { font-size: 1.5rem; font-weight: 600; color: #f1f5f9; }
-.stat-card .label { font-size: 12px; color: #64748b; margin-top: 2px; }
+}}
+.user-info .role-tag {{
+    font-size: 11px; padding: 1px 8px; border-radius: var(--radius-sm);
+    background: var(--bg-tertiary); color: var(--text-accent);
+}}
 
-/* 隐藏 Streamlit 默认侧边栏（页面文件导航无用，本系统用自定义按钮） */
-section[data-testid="stSidebar"] { display: none !important; }
-
-/* 统计卡片按钮（覆盖全局按钮样式） */
-.stat-row div[data-testid="column"] div.stButton > button {
-    background: #1e293b !important;
-    border: 1px solid #334155 !important;
-    border-radius: 6px !important;
+/* 统计卡片按钮 */
+.stat-row div[data-testid="column"] div.stButton > button {{
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
     padding: 0.8rem 1rem !important;
     height: auto !important;
     white-space: pre-line !important;
     line-height: 1.3 !important;
-    color: #f1f5f9 !important;
+    color: var(--text-primary) !important;
     font-weight: 600 !important;
     font-size: 1.5rem !important;
-}
-.stat-row div[data-testid="column"] div.stButton > button:hover {
-    border-color: #3b82f6 !important;
-    background: #1e293b !important;
-}
-.stat-row div[data-testid="column"] div.stButton > button[kind="primary"] {
-    border-color: #3b82f6 !important;
-}
+}}
+.stat-row div[data-testid="column"] div.stButton > button:hover {{
+    border-color: var(--border-focus) !important;
+    background: var(--bg-secondary) !important;
+}}
+.stat-row div[data-testid="column"] div.stButton > button[kind="primary"] {{
+    border-color: var(--border-focus) !important;
+}}
 </style>
 """
 

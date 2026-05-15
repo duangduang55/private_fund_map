@@ -6,9 +6,8 @@
 <title>批次机构地图</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="/static/style.css">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f1f5f9; }
 #map { width: 100vw; height: 100vh; }
 
 .header {
@@ -100,7 +99,7 @@ function renderMap(plans) {
 
     let html;
     if (isStarred) {
-      html = `<div style="width:${size}px;height:${size}px;background:${baseColor};border-radius:50%;border:${borderWidth}px solid ${borderColor};box-shadow:0 0 18px 4px rgba(251,191,36,0.7);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#fbbf24;">⭐</div>`;
+      html = `<div style="width:${size}px;height:${size}px;background:${baseColor};border-radius:50%;border:${borderWidth}px solid ${borderColor};box-shadow:0 0 18px 4px rgba(251,191,36,0.7);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;color:#fbbf24;"><use href="/static/icons.svg#icon-star"/></svg></div>`;
     } else {
       html = `<div style="width:${size}px;height:${size}px;background:${baseColor};border-radius:50%;border:${borderWidth}px solid ${borderColor};box-shadow:0 4px 12px rgba(0,0,0,0.5);"></div>`;
     }
@@ -115,8 +114,12 @@ function renderMap(plans) {
     const marker = L.marker([lat, lng], { icon });
     marker.bindTooltip(p.org_name, { direction: 'top' });
 
-    const statusMap = { 'pending': '⏳ 待拜访', 'completed': '✅ 已完成', 'cancelled': '❌ 已取消' };
-    const starTag = isStarred ? '<span style="color:#fbbf24;"> ⭐</span>' : '';
+    const statusMap = {
+      'pending': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#d97706;vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> 待拜访',
+      'completed': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#16a34a;vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 已完成',
+      'cancelled': '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#dc2626;vertical-align:middle"><use href="/static/icons.svg#icon-x"/></svg> 已取消',
+    };
+    const starTag = isStarred ? ' <svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg>' : '';
     const popupContent = `
       <div style="min-width:240px;">
         <h3 style="margin-bottom:6px;font-size:16px;">${p.org_name}${starTag}</h3>
@@ -145,9 +148,9 @@ function renderMap(plans) {
   const legendHtml = `
     <div class="legend">
       <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#f1f5f9;">图例</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#6b7280;border:2px solid #fbbf24;width:20px;height:20px;"></div> ⭐ 加星机构</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6b7280;border:2px solid #fbbf24;width:20px;height:20px;"></div> <svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg> 加星机构</div>
       <div class="legend-item"><div class="legend-dot" style="background:#6b7280;width:20px;height:20px;"></div> 普通机构</div>
-      <div style="margin-top:6px;font-size:11px;color:#94a3b8;">共 ${plans.length} 家机构 ${hasStarred ? '· ⭐ 已加星' : ''}</div>
+      <div style="margin-top:6px;font-size:11px;color:#94a3b8;">共 ${plans.length} 家机构 ${hasStarred ? '· <svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg> 已加星' : ''}</div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', legendHtml);
 }

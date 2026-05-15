@@ -4,93 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>私募拜访记录详情</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0f172a; color: #f1f5f9; min-height: 100vh;
-}
-.container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
-.header {
-    text-align: center; margin-bottom: 2rem;
-}
-.header h1 {
-    font-size: 1.5rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.3rem;
-}
-.header p { color: #64748b; font-size: 0.9rem; }
-.nav-links { display: flex; gap: 0.8rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.nav-links a {
-    color: #93c5fd; text-decoration: none; font-size: 13px; padding: 5px 14px;
-    border: 1px solid #475569; border-radius: 4px;
-}
-.nav-links a:hover { background: rgba(59,130,246,0.08); }
-
-/* 基本信息卡片 */
-.info-card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-    padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
-}
-.info-card h3 {
-    font-size: 0.85rem; color: #94a3b8; font-weight: 500; margin-bottom: 1rem;
-    padding-bottom: 0.5rem; border-bottom: 1px solid #334155;
-}
-.info-row {
-    display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin-bottom: 0.5rem;
-}
-.info-row .label { color: #64748b; font-size: 13px; min-width: 80px; }
-.info-row .value { color: #f1f5f9; font-size: 14px; font-weight: 500; }
-.info-row .value a { color: #93c5fd; text-decoration: none; }
-.info-row .value a:hover { text-decoration: underline; }
-
-/* 标签 */
-.tag-row {
-    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem;
-}
-.tag {
-    padding: 4px 12px; border-radius: 4px;
-    background: rgba(37,99,235,0.12); border: 1px solid rgba(59,130,246,0.3);
-    color: #93c5fd; font-size: 12px;
-}
-
-/* 拜访记录 */
-.visit-card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-    padding: 1rem 1.5rem; margin-bottom: 0.8rem;
-}
-.visit-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;
-}
-.visit-date { font-size: 13px; color: #94a3b8; }
-.visit-visitor { font-size: 13px; color: #94a3b8; }
-.status-badge {
-    display: inline-block; padding: 3px 10px; border-radius: 4px;
-    font-size: 12px; font-weight: 500;
-}
-.status-completed { background: rgba(22,163,74,0.12); color: #4ade80; border: 1px solid rgba(22,163,74,0.3); }
-.status-pending { background: rgba(217,119,6,0.12); color: #fcd34d; border: 1px solid rgba(217,119,6,0.3); }
-.status-cancelled { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
-.feedback-section {
-    margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(51,65,85,0.5);
-}
-.fb-row { margin-bottom: 0.4rem; }
-.fb-row .fb-label { color: #64748b; font-size: 12px; }
-.fb-row .fb-value { color: #e2e8f0; font-size: 13px; margin-top: 2px; }
-.fb-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem; }
-.fb-tag {
-    padding: 2px 8px; border-radius: 3px;
-    background: rgba(37,99,235,0.08); border: 1px solid rgba(59,130,246,0.2);
-    color: #93c5fd; font-size: 11px;
-}
-.cancel-reason {
-    margin-top: 0.4rem; padding: 0.5rem 0.8rem;
-    background: rgba(220,38,38,0.06); border-radius: 4px;
-    color: #f87171; font-size: 13px;
-}
-.loading { text-align: center; padding: 3rem; color: #64748b; }
-.empty-state { text-align: center; padding: 3rem 1rem; color: #64748b; }
-.footer { text-align: center; color: #475569; font-size: 0.75rem; padding: 2rem 0; }
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="container">
@@ -131,18 +45,22 @@ function render(data) {
     const visits = data.visits || [];
 
     const el = document.getElementById('content');
-    const statusMap = { pending: '⏳ 待拜访', completed: '✅ 已完成', cancelled: '❌ 已取消' };
+    const statusMap = {
+      pending: '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#d97706;vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> 待拜访',
+      completed: '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#16a34a;vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 已完成',
+      cancelled: '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#dc2626;vertical-align:middle"><use href="/static/icons.svg#icon-x"/></svg> 已取消',
+    };
 
     // 导航链接
     let html = `
     <div class="nav-links">
-        <a href="http://localhost:8501/?token=${TOKEN}" target="_top">← 返回主页</a>
-        <a href="/plans?token=${TOKEN}" target="_blank">📋 计划列表</a>
-        <a href="/map?token=${TOKEN}" target="_blank">🗺️ 返回地图</a>
+        <a href="http://localhost:8501/?token=${TOKEN}" target="_top"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-arrow-left"/></svg> 返回主页</a>
+        <a href="/plans?token=${TOKEN}" target="_blank"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 计划列表</a>
+        <a href="/map?token=${TOKEN}" target="_blank"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-map-pin"/></svg> 返回地图</a>
     </div>
 
     <div class="header">
-        <h1>🏢 ${fund.org_name || REG_NUM}</h1>
+        <h1>${fund.org_name || REG_NUM}</h1>
         <p>拜访记录详情</p>
     </div>
 
@@ -192,9 +110,9 @@ function render(data) {
             <div class="visit-card">
                 <div class="visit-header">
                     <div>
-                        <span class="visit-date">📅 ${v.planned_date || '-'}</span>
+                        <span class="visit-date"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-clock"/></svg> ${v.planned_date || '-'}</span>
                         <span style="margin:0 8px;color:#475569;">|</span>
-                        <span class="visit-visitor">👤 ${v.visitor_name || '-'}</span>
+                        <span class="visit-visitor"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-user"/></svg> ${v.visitor_name || '-'}</span>
                     </div>
                     <span class="status-badge ${statusClass}">${statusMap[v.status] || v.status}</span>
                 </div>`;
