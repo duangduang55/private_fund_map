@@ -100,8 +100,8 @@
     font-size: 12px; color: white;
 }
 .popup-visit-info {
-    margin-top: 8px; padding: 8px 10px; background: #fef3c7; border-radius: 6px;
-    font-size: 12px; color: #92400e; border: 1px solid #fcd34d;
+    margin-top: 8px; padding: 8px 10px; background: #1e293b; border-radius: 6px;
+    font-size: 12px; color: #94a3b8; border: 1px solid #334155;
 }
 .popup-actions { margin-top: 12px; display: flex; gap: 8px; }
 .popup-btn {
@@ -233,7 +233,7 @@ body.cart-open .cart-float-btn { right: 420px; }
 <!-- 统计 -->
 <div class="stats-box" id="stats-box">
     <div>显示: <span id="visible-count">0</span> / <span id="total-count">0</span></div>
-    <div style="font-size:11px;color:#6b7280;margin-top:4px;">状态: <span id="visited-count">0</span></div>
+    <div style="font-size:11px;color:var(--text-muted, #64748b);margin-top:4px;">状态: <span id="visited-count">0</span></div>
 </div>
 
 <!-- 侧滑购物车面板 -->
@@ -245,7 +245,7 @@ body.cart-open .cart-float-btn { right: 420px; }
     <div class="cart-panel-header">
         <h2>待拜访清单 <span class="cart-count-badge" id="cart-count">0</span></h2>
         <div style="display:flex;align-items:center;gap:8px;">
-            <a href="/plans?token={{ token }}" target="_blank" style="color:#6b7280;font-size:12px;text-decoration:none;padding:2px 8px;border-radius:4px;border:1px solid rgba(0,212,170,0.15);"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 计划</a>
+            <a href="/plans?token={{ token }}" target="_blank" style="color:var(--text-muted, #64748b);font-size:12px;text-decoration:none;padding:2px 8px;border-radius:4px;border:1px solid var(--border-default, #334155);"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-list"/></svg> 计划</a>
             <button class="cart-close-btn" id="cart-close-btn">✕</button>
         </div>
     </div>
@@ -450,7 +450,7 @@ function onMarkerClick(marker) {
                     const icon = r.status === 'completed' ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-check"/></svg>' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:2px;"><use href="/static/icons.svg#icon-clock"/></svg>';
                     const resultText = r.visit_status ? ` | ${r.visit_status}` : '';
                     const s = r.summary ? `<br><span style="color:#9ca3af;font-size:11px;">${r.summary}</span>` : '';
-                    return `<div style="padding:${i === 0 ? '0 0 5px' : '5px 0'};${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.1);' : ''}font-size:12px;color:#856404;line-height:1.5;">
+                    return `<div style="padding:${i === 0 ? '0 0 5px' : '5px 0'};${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.1);' : ''}font-size:12px;color:#94a3b8;line-height:1.5;">
                         ${icon} <strong>${r.visitor_name || '-'}</strong> ${r.planned_date || ''}${resultText}${s}
                     </div>`;
                 }).join('');
@@ -520,7 +520,7 @@ function renderCart() {
             <div class="cart-item-header">
                 <div>
                     <div class="cart-item-name">
-                        <span class="cart-star-btn" onclick="toggleCartStar(${item.id})" style="cursor:pointer;${item.starred ? 'color:#fbbf24;' : 'color:#64748b;'}">${item.starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star"/></svg>' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star-outline"/></svg>'}</span>
+                        <span class="cart-star-btn" onclick="toggleCartStar(${item.id})" style="cursor:pointer;${item.starred ? 'color:var(--warning-text, #fcd34d);' : 'color:#64748b;'}">${item.starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star"/></svg>' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;"><use href="/static/icons.svg#icon-star-outline"/></svg>'}</span>
                         ${item.org_name}
                     </div>
                     <div class="cart-item-detail">规模：${item.org_aum || '-'} | 基金数：${item.fund_count || '-'}</div>

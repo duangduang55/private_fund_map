@@ -102,7 +102,7 @@ function render() {
         el.innerHTML = `<div class="empty-state">
             <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#64748b;margin-bottom:12px;"><use href="/static/icons.svg#icon-list"/></svg>
             <p>待拜访清单为空</p>
-            <p style="font-size:13px;margin-top:8px;color:#6b7280;">请在地图上添加私募到待拜访清单</p>
+            <p style="font-size:13px;margin-top:8px;color:var(--text-muted, #64748b);">请在地图上添加私募到待拜访清单</p>
             <button class="btn btn-primary no-print" style="margin-top:16px;max-width:200px;" onclick="window.close()">关闭页面</button>
         </div>`;
         return;
@@ -125,10 +125,10 @@ function render() {
     cartItems.forEach(item => {
         const matchHtml = getMatchHtml(item.reg_num);
         const starred = item.starred === true || item.starred === 'true';
-        html += `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
+        html += `<div class="card" style="${starred ? 'border-left:3px solid var(--warning-text, #fcd34d);' : ''}">
             <div class="card-info">
                 <div class="card-name">
-                    <span class="star-toggle no-print" onclick="toggleStar(${item.id})" style="cursor:pointer;${starred ? 'color:#fbbf24;' : 'color:#64748b;'}font-size:16px;margin-right:4px;">${starred
+                    <span class="star-toggle no-print" onclick="toggleStar(${item.id})" style="cursor:pointer;${starred ? 'color:var(--warning-text, #fcd34d);' : 'color:#64748b;'}font-size:16px;margin-right:4px;">${starred
                       ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg>'
                       : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-star-outline"/></svg>'}</span>
                     ${item.org_name}
@@ -141,12 +141,12 @@ function render() {
                 <div class="card-detail"><span class="label">办公地址</span> <span class="value">${item.office_address || '-'}</span></div>
                 ${matchHtml}
             </div>
-            <button class="card-remove no-print" onclick="removeItem(${item.id})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:6px 10px;border-radius:6px;flex-shrink:0;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-trash"/></svg> 删除</button>
+            <button class="card-remove no-print" onclick="removeItem(${item.id})" style="background:none;border:none;color:var(--danger-text, #f87171);cursor:pointer;font-size:13px;padding:6px 10px;border-radius:6px;flex-shrink:0;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-trash"/></svg> 删除</button>
         </div>`;
     });
 
     html += `
-    <div class="no-print" style="margin-top:1.5rem;border-top:1px solid rgba(0,212,170,0.15);padding-top:1.5rem;">
+    <div class="no-print" style="margin-top:1.5rem;border-top:1px solid var(--border-default, #334155);padding-top:1.5rem;">
         <div class="form-row">
             <div class="form-group">
                 <label>计划拜访日期</label>
@@ -233,9 +233,9 @@ async function submitPlan() {
                 const plan = planRegNums[item.reg_num] || {};
                 const matchHtml = getMatchHtml(item.reg_num);
                 const starred = item.starred === true || item.starred === 'true';
-                return `<div class="card" style="${starred ? 'border-left:3px solid #fbbf24;' : ''}">
+                return `<div class="card" style="${starred ? 'border-left:3px solid var(--warning-text, #fcd34d);' : ''}">
                     <div class="card-info">
-                        <div class="card-name">${starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg> ' : ''}${item.org_name}</div>
+                        <div class="card-name">${starred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:var(--warning-text, #fcd34d);vertical-align:middle"><use href="/static/icons.svg#icon-star"/></svg> ' : ''}${item.org_name}</div>
                         <div class="card-detail">${item.reg_num}</div>
                         <div class="card-detail-row">
                             <span><span class="label">管理规模</span> <span class="value">${item.org_aum || '-'}</span></span>

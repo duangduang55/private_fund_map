@@ -92,8 +92,8 @@ function render(existing) {
     <div class="status-selector" id="status-selector">
         <h3>① 请选择操作</h3>
         <div class="status-options">
-            <div class="status-opt ${selectedAction === 'completed' ? 'selected-completed' : ''}" id="opt-completed" onclick="selectAction('completed')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 标记完成<br><span style="font-weight:400;font-size:12px;color:#6b7280;">拜访成功，填写详情</span></div>
-            <div class="status-opt ${selectedAction === 'cancelled' ? 'selected-cancelled' : ''}" id="opt-cancelled" onclick="selectAction('cancelled')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-x"/></svg> 取消计划<br><span style="font-weight:400;font-size:12px;color:#6b7280;">无需拜访，填写原因</span></div>
+            <div class="status-opt ${selectedAction === 'completed' ? 'selected-completed' : ''}" id="opt-completed" onclick="selectAction('completed')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 标记完成<br><span style="font-weight:400;font-size:var(--font-size-xs, 0.75rem);color:var(--text-secondary, #94a3b8);">拜访成功，填写详情</span></div>
+            <div class="status-opt ${selectedAction === 'cancelled' ? 'selected-cancelled' : ''}" id="opt-cancelled" onclick="selectAction('cancelled')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-x"/></svg> 取消计划<br><span style="font-weight:400;font-size:var(--font-size-xs, 0.75rem);color:var(--text-secondary, #94a3b8);">无需拜访，填写原因</span></div>
         </div>
     </div>
 

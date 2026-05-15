@@ -82,7 +82,7 @@ function render(plans) {
         el.innerHTML = `<div class="empty-state">
             <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#64748b;margin-bottom:12px;"><use href="/static/icons.svg#icon-list"/></svg>
             <p>暂无拜访计划</p>
-            <p style="font-size:13px;margin-top:8px;color:#6b7280;">请在地图上添加私募 → 确认提交后即可查看</p>
+            <p style="font-size:13px;margin-top:8px;color:var(--text-muted, #64748b);">请在地图上添加私募 → 确认提交后即可查看</p>
         </div>`;
         return;
     }
@@ -106,13 +106,13 @@ function render(plans) {
                 <div class="num">${plans.length}</div><div class="label">总计</div>
             </div>
             <div class="stat-card ${sortStatus === 'pending' ? 'active' : ''}" onclick="sortPlans(allPlans, 'pending'); render(allPlans);">
-                <div class="num" style="color:#fbbf24;">${pending}</div><div class="label">待拜访</div>
+                <div class="num" style="color:var(--warning-text, #fcd34d);">${pending}</div><div class="label">待拜访</div>
             </div>
             <div class="stat-card ${sortStatus === 'completed' ? 'active' : ''}" onclick="sortPlans(allPlans, 'completed'); render(allPlans);">
-                <div class="num" style="color:#34d399;">${completed}</div><div class="label">已完成</div>
+                <div class="num" style="color:var(--success-text, #4ade80);">${completed}</div><div class="label">已完成</div>
             </div>
             <div class="stat-card ${sortStatus === 'cancelled' ? 'active' : ''}" onclick="sortPlans(allPlans, 'cancelled'); render(allPlans);">
-                <div class="num" style="color:#ef4444;">${cancelled}</div><div class="label">已取消</div>
+                <div class="num" style="color:var(--danger-text, #f87171);">${cancelled}</div><div class="label">已取消</div>
             </div>
         </div>
         <div style="overflow-x:auto;">
@@ -125,7 +125,7 @@ function render(plans) {
                 const hasFeedback = p.feedback_id != null;
                 const detailUrl = detailUrls[p.reg_num] || '';
                 const isStarred = p.starred === true || p.starred === 'true' || p.starred === 't';
-                const starHtml = isStarred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle;margin-right:2px"><use href="/static/icons.svg#icon-star"/></svg>' : '';
+                const starHtml = isStarred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:var(--warning-text, #fcd34d);vertical-align:middle;margin-right:2px"><use href="/static/icons.svg#icon-star"/></svg>' : '';
                 const orgDisplay = starHtml + p.org_name;
                 const orgNameHtml = detailUrl
                     ? `<a href="${detailUrl}" target="_blank" style="color:#93c5fd;text-decoration:none;">${orgDisplay}</a>`

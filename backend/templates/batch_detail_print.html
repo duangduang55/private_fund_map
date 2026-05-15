@@ -15,9 +15,9 @@ body { padding: 2rem; }
 .btn-print { padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
 .btn-print:hover { background: #1d4ed8; }
 .info-bar { display: flex; gap: 2rem; flex-wrap: wrap; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
-.info-item .label { font-size: 11px; color: #94a3b8; }
+.info-item .label { font-size: var(--font-size-xs, 0.75rem); color: var(--text-secondary, #94a3b8); }
 .info-item .value { font-size: 15px; color: #f1f5f9; font-weight: 600; }
-.star-icon { color: #fbbf24; margin-right: 3px; }
+.star-icon { color: var(--warning-text, #fcd34d); margin-right: 3px; }
 table { table-layout: fixed; }
 @media print {
   body { background: white; color: #333; padding: 0.5in; }
@@ -82,7 +82,7 @@ async function loadBatch() {
     let rows = '';
     plans.forEach(p => {
       const isStarred = p.starred === true || p.starred === 'true' || p.starred === 't';
-      const starHtml = isStarred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:#fbbf24;vertical-align:middle;margin-right:2px"><use href="/static/icons.svg#icon-star"/></svg>' : '';
+      const starHtml = isStarred ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="currentColor" style="color:var(--warning-text, #fcd34d);vertical-align:middle;margin-right:2px"><use href="/static/icons.svg#icon-star"/></svg>' : '';
       const hasFeedback = p.feedback_id != null;
       const feedbackHtml = hasFeedback
         ? '<span style="color:#16a34a;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 已完成</span>'
