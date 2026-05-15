@@ -1,6 +1,7 @@
 #!/bin/bash
 # 私募基金拓客辅助系统 — 启动脚本
 # 自动检测 Python 环境，从 .env 加载配置
+# 可重复运行：自动杀掉旧进程后重启
 
 set -e
 
@@ -11,7 +12,28 @@ echo "=========================================="
 echo "  私募基金拓客辅助系统"
 echo "=========================================="
 
-# ── 自动检测 Python 环境 ──
+# ── 1. 停止占用端口的旧进程 ──
+echo "[1/5] 清理旧进程..."
+stop_port() {
+    local port=$1 name=$2
+    local pids
+    pids=$(lsof -ti :"$port" 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        kill $pids 2>/dev/null || true
+        sleep 1
+        pids=$(lsof -ti :"$port" 2>/dev/null || true)
+        if [ -n "$pids" ]; then
+            kill -9 $pids 2>/dev/null || true
+        fi
+        echo "  ✅ 已停止旧 $name (port $port)"
+    else
+        echo "  ⏭️   $name (port $port) 未运行"
+    fi
+}
+stop_port 8100 "FastAPI"
+stop_port 8501 "Streamlit"
+
+# ── 2. 自动检测 Python 环境 ──
 detect_python() {
     # 1. 项目内 venv/
     if [ -f "venv/bin/python3" ]; then
@@ -42,8 +64,8 @@ detect_python() {
 
 detect_python
 
-# ── 检查 PostgreSQL 连接（从 config.py 读取配置） ──
-echo "[1/3] 检查 PostgreSQL 连接..."
+# ── 3. 检查 PostgreSQL 连接（从 config.py 读取配置） ──
+echo "[3/5] 检查 PostgreSQL 连接..."
 python3 -c "
 import sys; sys.path.insert(0, '.')
 from backend.config import TS_QUANT_DB, FUND_MAP_DB
@@ -55,7 +77,7 @@ print('  ✅ 数据库连接正常')
 " 2>&1 || { echo "  ❌ 数据库连接失败，请确认 PostgreSQL 已启动"; exit 1; }
 
 # 启动 FastAPI 后端（后台）
-echo "[2/3] 启动 FastAPI 后端 (port 8100)..."
+echo "[4/5] 启动 FastAPI 后端 (port 8100)..."
 python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8100 --reload &
 FASTAPI_PID=$!
 echo "  ✅ FastAPI 已启动 (PID: $FASTAPI_PID)"
@@ -64,7 +86,7 @@ echo "  ✅ FastAPI 已启动 (PID: $FASTAPI_PID)"
 sleep 2
 
 # 启动 Streamlit 前端
-echo "[3/3] 启动 Streamlit 前端 (port 8501)..."
+echo "[5/5] 启动 Streamlit 前端 (port 8501)..."
 streamlit run app.py --server.port 8501 &
 STREAMLIT_PID=$!
 echo "  ✅ Streamlit 已启动 (PID: $STREAMLIT_PID)"
