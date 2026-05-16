@@ -1,0 +1,24 @@
+{
+  "_comment1": "=== 飞书开放平台凭证（从 https://open.feishu.cn 获取） ===",
+  "FEISHU_APP_ID": "cli_a9576410fef81cc9",
+  "FEISHU_APP_SECRET": "VoMv4LG84gjQQlGFage2cNVWasygdpom",
+  "_comment2": "=== 飞书多维表格参数（从表格URL提取） ===",
+  "_comment3": "URL 格式: https://xxx.feishu.cn/base/{FEISHU_APP_TOKEN}?table={FEISHU_TABLE_ID}",
+  "FEISHU_APP_TOKEN": "XbYubwOOca8oo9sZUrLcX6Xbnme",
+  "FEISHU_TABLE_ID": "tblfpmoAwJgkRmhN",
+  "FEISHU_ORG_DICT_TABLE_ID": "tblEkotFTMArOXsF",
+  "_comment4": "=== 自动同步配置（后台线程按间隔执行，0=关闭） ===",
+  "FEISHU_SYNC_INTERVAL_MINUTES": 0,
+  "_comment5": "=== 定时同步任务列表（系统 crontab 实现） ===",
+  "_comment6": "expression: cron 表达式, label: 任务标签（用于标识和删除）",
+  "cron_jobs": [
+    {
+      "expression": "0 12 * * *",
+      "label": "每天中午12点同步"
+    },
+    {
+      "expression": "0 20 * * *",
+      "label": "每天晚上8点同步"
+    }
+  ]
+}

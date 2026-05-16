@@ -1,0 +1,20 @@
+{
+  "_comment1": "=== 飞书开放平台凭证（从 https://open.feishu.cn 获取） ===",
+  "FEISHU_APP_ID": "cli_xxxxx",
+  "FEISHU_APP_SECRET": "your_app_secret_here",
+
+  "_comment2": "=== 飞书多维表格参数（从表格URL提取） ===",
+  "_comment3": "URL 格式: https://xxx.feishu.cn/base/{FEISHU_APP_TOKEN}?table={FEISHU_TABLE_ID}",
+  "FEISHU_APP_TOKEN": "your_app_token_here",
+  "FEISHU_TABLE_ID": "tblxxxxx",
+  "FEISHU_ORG_DICT_TABLE_ID": "tblxxxxx",
+
+  "_comment4": "=== 自动同步配置（后台线程按间隔执行，0=关闭） ===",
+  "FEISHU_SYNC_INTERVAL_MINUTES": 30,
+
+  "_comment5": "=== 定时同步任务列表（系统 crontab 实现） ===",
+  "_comment6": "expression: cron 表达式, label: 任务标签（用于标识和删除）",
+  "cron_jobs": [
+    {"expression": "*/30 * * * *", "label": "每30分钟同步"}
+  ]
+}

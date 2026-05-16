@@ -102,7 +102,7 @@ function render(existing) {
         <h3>取消说明</h3>
         <div class="form-group">
             <label>取消原因</label>
-            <textarea id="cancel-reason" placeholder="填写取消原因...">${fb.id && planData.status === 'cancelled' ? (planData.remark || '') : ''}</textarea>
+            <textarea id="cancel-reason" placeholder="填写取消原因...">${fb.id && planData.status === 'cancelled' ? (planData.remark || fb.summary || '') : ''}</textarea>
         </div>
     </div>
 
@@ -135,9 +135,8 @@ function render(existing) {
 
         <h3 style="margin-top:1.5rem;">④ 联系情况</h3>
         <div class="checkbox-row">
-            <label><input type="checkbox" id="contact-obtained" ${fb.contact_obtained ? 'checked' : ''}> 获取联系方式</label>
-            <label><input type="checkbox" id="has-business-card" ${fb.has_business_card ? 'checked' : ''}> 有名片</label>
-            <label><input type="checkbox" id="has-contact-info" ${fb.has_contact_info ? 'checked' : ''}> 获取联系信息</label>
+            <label><input type="checkbox" id="has-business-card" ${fb.has_business_card ? 'checked' : ''}> 已获取联系方式/名片</label>
+            <label><input type="checkbox" id="has-contact-info" ${fb.has_contact_info ? 'checked' : ''}> 与高管/实控人建立联系</label>
         </div>
 
         <h3 style="margin-top:1.5rem;">⑤ 沟通详情</h3>
@@ -252,7 +251,6 @@ async function submitFeedback() {
         visit_date: document.getElementById('visit-date').value,
         visitor_name: document.getElementById('visitor-name').value.trim(),
         visit_status: document.getElementById('visit-status').value,
-        contact_obtained: document.getElementById('contact-obtained').checked,
         has_business_card: document.getElementById('has-business-card').checked,
         has_contact_info: document.getElementById('has-contact-info').checked,
         summary: document.getElementById('summary').value.trim(),

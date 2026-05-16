@@ -102,7 +102,6 @@ def show_batch_import_page():
                             "office_address": fund.get("office_address", ""),
                             "office_coordinates": "",
                             "summary": "",
-                            "contact_obtained": False,
                             "has_business_card": False,
                             "has_contact_info": False,
                             "communication_detail": "",
@@ -140,17 +139,12 @@ def show_batch_import_page():
                     placeholder="拜访总结",
                     key=f"bi_summary_{i}",
                 )
-                item["contact_obtained"] = st.checkbox(
-                    "获取联系方式",
-                    value=item.get("contact_obtained", False),
-                    key=f"bi_contact_{i}",
-                )
                 item["has_business_card"] = st.checkbox(
-                    "有名片", value=item.get("has_business_card", False),
+                    "已获取联系方式/名片", value=item.get("has_business_card", False),
                     key=f"bi_card_{i}",
                 )
                 item["has_contact_info"] = st.checkbox(
-                    "获取联系信息", value=item.get("has_contact_info", False),
+                    "与高管/实控人建立联系", value=item.get("has_contact_info", False),
                     key=f"bi_info_{i}",
                 )
                 item["communication_detail"] = st.text_area(
