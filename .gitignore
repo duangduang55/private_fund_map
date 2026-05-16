@@ -22,23 +22,26 @@ venv_*/
 # ── 日志 / 运行时 ──
 *.log
 nohup.out
+logs/
 
 # ── AI 开发辅助文件（不上传公开仓库） ──
 .claude/
-CLAUDE.md
-SPEC.md
 
 # ── 项目开发中间产物 ──
 team-work/
 HARNESS_PROGRESS.md
 migration_*.sql
-
+harness/
 # ── IDE ──
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+
+# ── 飞书同步敏感配置 ──
+feishu_sync/feishu_config/config.json
+feishu_sync/logs/
 
 # ── OS ──
 .DS_Store

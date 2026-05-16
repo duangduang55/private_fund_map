@@ -2,7 +2,7 @@
 
 import psycopg2
 import psycopg2.extras
-from backend.config import FUND_MAP_DB
+from src.backend.config import FUND_MAP_DB
 
 
 def get_fm_conn():
@@ -217,6 +217,19 @@ def set_plan_star(plan_id: int, user_id: int, starred: bool) -> bool:
 
 # ── 拜访计划 ──
 
+
+def get_plan_owner_id(plan_id: int) -> int | None:
+    """查询拜访计划的所有者 user_id"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT user_id FROM visit_plans WHERE id = %s", (plan_id,))
+            row = cur.fetchone()
+            return row[0] if row else None
+    finally:
+        conn.close()
+
+
 def create_plans_from_cart(user_id: int, planned_date: str, visitor_name: str, batch_id: str = "") -> list[dict]:
     """将购物车中的条目转为拜访计划（同批次共享 batch_id，星标状态继承）"""
     items = get_cart_items(user_id)
@@ -321,15 +334,14 @@ def upsert_feedback(plan_id: int, data: dict) -> dict | None:
             cur.execute(
                 """INSERT INTO visit_feedback
                    (visit_plan_id, visit_date, visitor_name, visit_status,
-                    contact_obtained, has_business_card, has_contact_info,
+                    has_business_card, has_contact_info,
                     summary, communication_detail, follow_up_suggestions, tags)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                    ON CONFLICT (visit_plan_id)
                    DO UPDATE SET
                        visit_date = EXCLUDED.visit_date,
                        visitor_name = EXCLUDED.visitor_name,
                        visit_status = EXCLUDED.visit_status,
-                       contact_obtained = EXCLUDED.contact_obtained,
                        has_business_card = EXCLUDED.has_business_card,
                        has_contact_info = EXCLUDED.has_contact_info,
                        summary = EXCLUDED.summary,
@@ -343,7 +355,6 @@ def upsert_feedback(plan_id: int, data: dict) -> dict | None:
                     data.get("visit_date"),
                     data.get("visitor_name"),
                     data.get("visit_status"),
-                    data.get("contact_obtained", False),
                     data.get("has_business_card", False),
                     data.get("has_contact_info", False),
                     data.get("summary", ""),
@@ -362,15 +373,21 @@ def upsert_feedback(plan_id: int, data: dict) -> dict | None:
         conn.close()
 
 
-def update_plan_status(plan_id: int, status: str) -> bool:
-    """更新拜访计划状态"""
+def update_plan_status(plan_id: int, status: str, remark: str = "") -> bool:
+    """更新拜访计划状态，可选更新备注"""
     conn = get_fm_conn()
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE visit_plans SET status = %s, updated_at = now() WHERE id = %s",
-                (status, plan_id),
-            )
+            if remark:
+                cur.execute(
+                    "UPDATE visit_plans SET status = %s, remark = %s, updated_at = now() WHERE id = %s",
+                    (status, remark, plan_id),
+                )
+            else:
+                cur.execute(
+                    "UPDATE visit_plans SET status = %s, updated_at = now() WHERE id = %s",
+                    (status, plan_id),
+                )
             conn.commit()
             return cur.rowcount > 0
     finally:
@@ -387,7 +404,7 @@ def get_plans_with_feedback(user_id: int, role: str) -> list[dict]:
                     """SELECT vp.*, u.display_name as creator_name,
                               vf.id as feedback_id, vf.visit_status as feedback_status,
                               vf.summary as feedback_summary, vf.tags,
-                              vf.contact_obtained, vf.has_business_card
+                              vf.has_business_card
                       FROM visit_plans vp
                       LEFT JOIN users u ON vp.user_id = u.id
                       LEFT JOIN visit_feedback vf ON vf.visit_plan_id = vp.id
@@ -398,7 +415,7 @@ def get_plans_with_feedback(user_id: int, role: str) -> list[dict]:
                     """SELECT vp.*, u.display_name as creator_name,
                               vf.id as feedback_id, vf.visit_status as feedback_status,
                               vf.summary as feedback_summary, vf.tags,
-                              vf.contact_obtained, vf.has_business_card
+                              vf.has_business_card
                       FROM visit_plans vp
                       LEFT JOIN users u ON vp.user_id = u.id
                       LEFT JOIN visit_feedback vf ON vf.visit_plan_id = vp.id
@@ -553,15 +570,14 @@ def batch_import_with_feedback(user_id: int, records: list[dict]) -> int:
                     cur.execute(
                         """INSERT INTO visit_feedback
                            (visit_plan_id, visit_date, visitor_name, visit_status,
-                            contact_obtained, has_business_card, has_contact_info,
+                            has_business_card, has_contact_info,
                             summary, communication_detail, follow_up_suggestions, tags)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                         (
                             plan_id,
                             rec.get("planned_date", rec.get("visit_date", "")),
                             rec.get("visitor_name", ""),
                             '其他',
-                            rec.get("contact_obtained", False),
                             rec.get("has_business_card", False),
                             rec.get("has_contact_info", False),
                             rec.get("summary", ""),
@@ -658,7 +674,7 @@ def get_all_visit_records(reg_num: str) -> list[dict]:
                           vp.planned_date, vp.visitor_name, vp.status, vp.remark,
                           vf.id as feedback_id, vf.visit_status, vf.summary,
                           vf.communication_detail, vf.follow_up_suggestions, vf.tags,
-                          vf.contact_obtained, vf.has_business_card, vf.has_contact_info,
+                          vf.has_business_card, vf.has_contact_info,
                           vf.visit_date, vf.visitor_name as feedback_visitor
                    FROM visit_plans vp
                    LEFT JOIN visit_feedback vf ON vf.visit_plan_id = vp.id

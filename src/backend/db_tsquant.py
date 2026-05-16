@@ -7,7 +7,7 @@ import math
 from decimal import Decimal
 import psycopg2
 import psycopg2.extras
-from backend.config import TS_QUANT_DB
+from src.backend.config import TS_QUANT_DB
 
 
 def get_ts_conn():

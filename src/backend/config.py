@@ -3,11 +3,14 @@
 import os
 from pathlib import Path
 
-# 从项目根目录加载 .env 文件
-env_path = Path(__file__).resolve().parent.parent / ".env"
+# 从 config/ 目录加载 .env 文件
+env_path = Path(__file__).resolve().parent.parent.parent / "config" / ".env"
 if env_path.exists():
     from dotenv import load_dotenv
     load_dotenv(dotenv_path=env_path)
+
+# 外部可用的 .env 路径（供 db_admin.py 读写配置）
+ENV_PATH = env_path
 
 # ts_quant_db（只读 — 私募数据来源）
 TS_QUANT_DB = {

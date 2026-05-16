@@ -3,7 +3,7 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
-from backend.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES
+from src.backend.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES
 
 
 def hash_password(password: str) -> str:

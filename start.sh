@@ -68,7 +68,7 @@ detect_python
 echo "[3/5] 检查 PostgreSQL 连接..."
 python3 -c "
 import sys; sys.path.insert(0, '.')
-from backend.config import TS_QUANT_DB, FUND_MAP_DB
+from src.backend.config import TS_QUANT_DB, FUND_MAP_DB
 import psycopg2
 for cfg in [TS_QUANT_DB, FUND_MAP_DB]:
     conn = psycopg2.connect(**cfg)
@@ -78,7 +78,7 @@ print('  ✅ 数据库连接正常')
 
 # 启动 FastAPI 后端（后台）
 echo "[4/5] 启动 FastAPI 后端 (port 8100)..."
-python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8100 --reload &
+python3 -m uvicorn src.backend.main:app --host 0.0.0.0 --port 8100 --reload &
 FASTAPI_PID=$!
 echo "  ✅ FastAPI 已启动 (PID: $FASTAPI_PID)"
 
@@ -87,7 +87,7 @@ sleep 2
 
 # 启动 Streamlit 前端
 echo "[5/5] 启动 Streamlit 前端 (port 8501)..."
-streamlit run app.py --server.port 8501 &
+streamlit run src/app.py --server.port 8501 &
 STREAMLIT_PID=$!
 echo "  ✅ Streamlit 已启动 (PID: $STREAMLIT_PID)"
 

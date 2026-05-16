@@ -1,12 +1,16 @@
 """私募基金拓客辅助系统 — Streamlit 主入口"""
 
 import os
+import sys
 import streamlit as st
 import requests
 
-# 从项目根目录加载 .env
+# 将项目根目录加入 sys.path（确保 src. 包可导入）
 from pathlib import Path
-env_path = Path(__file__).resolve().parent / ".env"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# 从 config/ 目录加载 .env
+env_path = Path(__file__).resolve().parent.parent / "config" / ".env"
 if env_path.exists():
     from dotenv import load_dotenv
     load_dotenv(dotenv_path=env_path)
@@ -181,37 +185,48 @@ def show_login():
 # ── 主导航栏 ──
 def show_navbar():
     user = st.session_state.user
-    cols = st.columns([1, 1, 1, 1, 1, 1, 1, 2])
-    pages = [
+    role = user["role"]
+
+    # 根据角色构建按钮列表
+    buttons = [
         ("query", "🔍 数据查询"),
         ("map", "🗺️ 地图看板"),
-        ("plans", "📋 拜访计划"),
-        ("plan_list", "📄 计划列表"),
-        ("history", "📈 拜访历史"),
-        ("batch_import", "📥 补录"),
+        ("plans", "📋 制定计划"),
+        ("plan_list", "✅ 拜访反馈"),
+        ("history", "📈 统计看板"),
+        ("batch_import", "📥 批量补录"),
+        ("change_pwd", "🔑 修改密码"),
     ]
-    idx = 0
-    for name, label in pages:
-        with cols[idx]:
+    if role == "super_admin":
+        buttons.append(("settings", "⚙️ 系统设置"))
+
+    # 布局：按钮 + 退出 + 用户信息
+    n_buttons = len(buttons)
+    col_weights = [1] * n_buttons + [1, 2]
+    cols = st.columns(col_weights)
+
+    for i, (name, label) in enumerate(buttons):
+        with cols[i]:
             if st.button(label, use_container_width=True,
                           type="primary" if st.session_state.page == name else "secondary"):
                 st.session_state.page = name
                 st.rerun()
-        idx += 1
+
+    # 退出按钮
+    with cols[n_buttons]:
+        if st.button("🚪 退出", use_container_width=True):
+            do_logout()
 
     # 用户信息
-    with cols[-1]:
+    role_label = {"super_admin": "超级管理员", "admin": "管理员", "member": "普通用户"}.get(role, role)
+    with cols[n_buttons + 1]:
         st.markdown(
             f'<div style="text-align:right;color:#f1f5f9;font-size:13px;padding:6px 0;">'
             f'{user["display_name"]} '
-            f'<span style="font-size:11px;padding:1px 8px;border-radius:4px;background:#1e3a5f;color:#93c5fd;">{user["role"]}</span>'
+            f'<span style="font-size:11px;padding:1px 8px;border-radius:4px;background:#1e3a5f;color:#93c5fd;">{role_label}</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
-    # 退出按钮
-    with cols[6]:
-        if st.button("🚪 退出", use_container_width=True):
-            do_logout()
 
 
 # ── 页面路由 ──
@@ -229,12 +244,12 @@ def main():
 
     page = st.session_state.page
     if page == "query":
-        from pages.query import show_query_page
+        from src.pages.query import show_query_page
         show_query_page()
     elif page == "map":
         show_map_page()
     elif page == "plans":
-        from pages.plans import show_plans_page
+        from src.pages.plans import show_plans_page
         show_plans_page()
     elif page == "plan_list":
         st.markdown(
@@ -243,11 +258,17 @@ def main():
         )
         st.info("正在跳转到计划列表页面…")
     elif page == "history":
-        from pages.history import show_history_page
+        from src.pages.history import show_history_page
         show_history_page()
     elif page == "batch_import":
-        from pages.batch_import import show_batch_import_page
+        from src.pages.batch_import import show_batch_import_page
         show_batch_import_page()
+    elif page == "change_pwd":
+        from src.pages.settings import show_change_password
+        show_change_password()
+    elif page == "settings":
+        from src.pages.settings import show_settings_page
+        show_settings_page()
 
     st.markdown('<div class="footer">数据来源：中国证券投资基金业协会（AMAC）</div>', unsafe_allow_html=True)
 

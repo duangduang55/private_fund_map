@@ -2,9 +2,9 @@
 
 import psycopg2
 import psycopg2.extras
-from backend.auth_utils import hash_password, verify_password
-from backend.config import FUND_MAP_DB, ENV_PATH
-from backend.db_fundmap import create_user as db_create_user
+from src.backend.auth_utils import hash_password, verify_password
+from src.backend.config import FUND_MAP_DB, ENV_PATH
+from src.backend.db_fundmap import create_user as db_create_user
 
 
 def get_fm_conn():
