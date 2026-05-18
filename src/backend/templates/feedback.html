@@ -144,7 +144,16 @@ function render(existing) {
             <textarea id="communication-detail" placeholder="详细描述沟通情况...">${fb.communication_detail || ''}</textarea>
         </div>
 
-        <h3 style="margin-top:1.5rem;">⑥ 标签</h3>
+        <h3 style="margin-top:1.5rem;">⑥ 资料</h3>
+        <div id="file-section">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <input type="file" id="file-input" multiple style="flex:1;padding:6px 10px;border-radius:4px;border:1px solid #475569;background:rgba(255,255,255,0.04);color:#f1f5f9;font-size:13px;">
+                <button class="upload-btn" onclick="uploadFiles()" style="padding:6px 16px;border-radius:4px;border:none;background:#2563eb;color:#fff;font-size:13px;cursor:pointer;white-space:nowrap;">上传</button>
+            </div>
+            <div id="file-list" style="font-size:13px;"></div>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">⑦ 标签</h3>
         <div class="tag-row">
             ${[...new Set([...TAG_OPTIONS, ...userTags])].map(t =>
                 `<button class="tag-btn ${selectedTags.has(t) ? 'active' : ''}" onclick="toggleTag('${t}')">${t}</button>`
@@ -155,7 +164,7 @@ function render(existing) {
             </div>
         </div>
 
-        <h3 style="margin-top:1.5rem;">⑦ 后续建议</h3>
+        <h3 style="margin-top:1.5rem;">⑧ 后续建议</h3>
         <div class="form-group">
             <textarea id="follow-up" placeholder="后续跟进建议...">${fb.follow_up_suggestions || ''}</textarea>
         </div>
@@ -165,6 +174,7 @@ function render(existing) {
         <button class="btn btn-secondary" onclick="window.close()">取消</button>
         <button class="btn btn-primary" id="submit-btn" onclick="submitFeedback()">${fb.id ? '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 更新反馈' : '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 提交'}</button>
     </div>`;
+    setTimeout(loadFiles, 0);
 }
 
 function selectAction(action) {
@@ -285,6 +295,76 @@ async function submitFeedback() {
                 </div>`;
         } else { alert('提交失败'); btn.disabled = false; btn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 提交'; }
     } catch (e) { alert('提交失败：' + e.message); btn.disabled = false; btn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><use href="/static/icons.svg#icon-check"/></svg> 提交'; }
+}
+
+// ── 文件上传相关 ──
+
+async function loadFiles() {
+    if (!PLAN_ID) return;
+    try {
+        const resp = await fetch(`${API_BASE}/api/feedback/${PLAN_ID}/files`, {
+            headers: { 'Authorization': `Bearer ${TOKEN}` }
+        });
+        const result = await resp.json();
+        renderFileList(result.data || []);
+    } catch (e) {
+        console.error('加载文件列表失败:', e);
+    }
+}
+
+function renderFileList(files) {
+    const el = document.getElementById('file-list');
+    if (!el) return;
+    if (!files.length) {
+        el.innerHTML = '<div style="color:#94a3b8;font-size:13px;">暂无已上传文件</div>';
+        return;
+    }
+    el.innerHTML = files.map(f =>
+        `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;background:rgba(255,255,255,0.04);margin-bottom:4px;">
+            <a href="/uploads/${planData.reg_num}/${f}" target="_blank" style="color:#93c5fd;text-decoration:none;font-size:13px;">${f}</a>
+            <button onclick="deleteFile('${f}')" style="padding:2px 8px;border-radius:3px;border:1px solid #dc2626;background:transparent;color:#f87171;font-size:12px;cursor:pointer;">删除</button>
+        </div>`
+    ).join('');
+}
+
+async function uploadFiles() {
+    const input = document.getElementById('file-input');
+    if (!input.files || !input.files.length) { alert('请先选择文件'); return; }
+    const visitDate = document.getElementById('visit-date').value;
+    if (!visitDate) { alert('请先填写拜访日期'); return; }
+    const btn = document.querySelector('.upload-btn');
+    btn.disabled = true; btn.textContent = '上传中...';
+    try {
+        for (const file of input.files) {
+            const fd = new FormData();
+            fd.append('plan_id', PLAN_ID);
+            fd.append('visit_date', visitDate);
+            fd.append('file', file);
+            const resp = await fetch(`${API_BASE}/api/feedback/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TOKEN}` },
+                body: fd,
+            });
+            const r = await resp.json();
+            if (!r.success) { alert(`上传 ${file.name} 失败`); }
+        }
+        input.value = '';
+        await loadFiles();
+    } catch (e) { alert('上传失败：' + e.message); }
+    finally { btn.disabled = false; btn.textContent = '上传'; }
+}
+
+async function deleteFile(filename) {
+    if (!confirm(`确认删除文件 ${filename}？`)) return;
+    try {
+        const resp = await fetch(`${API_BASE}/api/feedback/files/${filename}?reg_num=${planData.reg_num}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${TOKEN}` },
+        });
+        const r = await resp.json();
+        if (r.success) { await loadFiles(); }
+        else { alert('删除失败'); }
+    } catch (e) { alert('删除失败：' + e.message); }
 }
 
 loadPlan();

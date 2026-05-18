@@ -43,6 +43,9 @@ harness/
 feishu_sync/feishu_config/config.json
 feishu_sync/logs/
 
+# ── 上传文件 ──
+upload/
+
 # ── OS ──
 .DS_Store
 Thumbs.db

@@ -1,6 +1,6 @@
 """FastAPI 主应用 — 私募基金拓客辅助系统后端"""
 
-from fastapi import FastAPI, HTTPException, Depends, Query, Header
+from fastapi import FastAPI, HTTPException, Depends, Query, Header, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,6 +45,7 @@ from src.backend.db_fundmap import (
     clear_cart,
     toggle_cart_star,
     set_plan_star,
+    get_plan_by_id,
     get_plan_owner_id,
     create_plans_from_cart,
     get_user_plans,
@@ -79,6 +80,11 @@ app.add_middleware(
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# 上传文件目录
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "upload")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "map.html")
 BATCH_MAP_HTML_PATH = os.path.join(os.path.dirname(__file__), "templates", "batch_map.html")
@@ -651,6 +657,73 @@ def api_save_feedback(req: FeedbackRequest, user: dict = Depends(get_current_use
     return {"success": fb is not None, "data": fb}
 
 
+# ── 文件上传 API ─────────────────────────────────────────────
+
+@app.post("/api/feedback/upload")
+async def api_feedback_upload(
+    plan_id: int = Form(...),
+    visit_date: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    """上传拜访反馈文件，保存为 {reg_num}-{visit_date}-{原文件名}"""
+    plan = get_plan_by_id(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="拜访计划不存在")
+
+    reg_num = plan["reg_num"]
+    reg_dir = os.path.join(UPLOAD_DIR, reg_num)
+    os.makedirs(reg_dir, exist_ok=True)
+
+    orig_filename = file.filename.replace("\\", "/").split("/")[-1] if file.filename else "unnamed"
+    safe_filename = f"{reg_num}-{visit_date}-{orig_filename}"
+    file_path = os.path.join(reg_dir, safe_filename)
+
+    content = await file.read()
+    if len(content) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="文件大小超过 20MB 限制")
+
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    return {"success": True, "filename": safe_filename}
+
+
+@app.get("/api/feedback/{plan_id}/files")
+def api_feedback_list_files(plan_id: int, user: dict = Depends(get_current_user)):
+    """列出某拜访计划已上传的文件"""
+    plan = get_plan_by_id(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="拜访计划不存在")
+
+    reg_dir = os.path.join(UPLOAD_DIR, plan["reg_num"])
+    if not os.path.isdir(reg_dir):
+        return {"data": []}
+
+    files = sorted(os.listdir(reg_dir))
+    return {"data": files}
+
+
+@app.delete("/api/feedback/files/{filename}")
+def api_feedback_delete_file(
+    filename: str,
+    reg_num: str = Query(...),
+    user: dict = Depends(get_current_user),
+):
+    """删除已上传的文件（含路径穿越防护）"""
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="非法文件名")
+    if ".." in reg_num or "/" in reg_num or "\\" in reg_num:
+        raise HTTPException(status_code=400, detail="非法机构编号")
+
+    file_path = os.path.join(UPLOAD_DIR, reg_num, filename)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+
+    os.remove(file_path)
+    return {"success": True}
+
+
 # ── 用户标签 API ───────────────────────────────────────────────
 
 @app.get("/api/user-tags")
@@ -805,7 +878,10 @@ def api_fund_profile(reg_num: str, user: dict = Depends(get_current_user)):
     # 从 fund_map_db 获取标签和拜访记录
     tags = get_fund_tags(reg_num)
     visits = get_all_visit_records(reg_num)
-    return {"fund": fund_info, "tags": tags, "visits": visits}
+    # 读取该机构已上传的文件
+    reg_dir = os.path.join(UPLOAD_DIR, reg_num)
+    all_files = sorted(os.listdir(reg_dir)) if os.path.isdir(reg_dir) else []
+    return {"fund": fund_info, "tags": tags, "visits": visits, "files": all_files}
 
 
 # ── 飞书同步 API ─────────────────────────────────────────

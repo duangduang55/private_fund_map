@@ -168,6 +168,20 @@ function render(data) {
                             ${v.tags.map(t => `<span class="fb-tag">${t}</span>`).join('')}
                         </div>
                     </div>` : ''}
+                    ${(() => {
+                        const visitFiles = (data.files || []).filter(f =>
+                            f.startsWith(REG_NUM + '-' + (v.visit_date || v.planned_date || '') + '-')
+                        );
+                        return visitFiles.length > 0 ? `
+                    <div class="fb-row">
+                        <div class="fb-label">资料</div>
+                        <div class="fb-value" style="font-size:13px;">
+                            ${visitFiles.map(f =>
+                                `<div style="margin-bottom:2px;"><a href="/uploads/${REG_NUM}/${f}" target="_blank" style="color:#93c5fd;text-decoration:none;">${f}</a></div>`
+                            ).join('')}
+                        </div>
+                    </div>` : '';
+                    })()}
                 </div>`;
             }
 
@@ -192,7 +206,7 @@ function render(data) {
                 html += `
                 <div class="visit-actions" style="padding:0.5rem 1rem 0.75rem 1rem;border-top:1px solid #334155;display:flex;gap:8px;">
                     <a class="btn btn-sm" href="/feedback?token=${TOKEN}&amp;plan_id=${v.id}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;border:1px solid #475569;color:#94a3b8;font-size:13px;text-decoration:none;cursor:pointer;">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><use href="/static/icons.svg#icon-edit"/></svg> 编辑
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> 编辑
                     </a>
                     <button class="btn btn-sm" onclick="deleteVisit(${v.id}, '${v.org_name || ''}')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;border:1px solid #dc2626;color:#ef4444;font-size:13px;cursor:pointer;background:none;">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;"><use href="/static/icons.svg#icon-trash"/></svg> 删除

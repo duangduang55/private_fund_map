@@ -218,6 +218,18 @@ def set_plan_star(plan_id: int, user_id: int, starred: bool) -> bool:
 # ── 拜访计划 ──
 
 
+def get_plan_by_id(plan_id: int) -> dict | None:
+    """查询拜访计划完整记录"""
+    conn = get_fm_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM visit_plans WHERE id = %s", (plan_id,))
+            row = cur.fetchone()
+            return dict(row) if row else None
+    finally:
+        conn.close()
+
+
 def get_plan_owner_id(plan_id: int) -> int | None:
     """查询拜访计划的所有者 user_id"""
     conn = get_fm_conn()

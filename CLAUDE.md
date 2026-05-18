@@ -54,6 +54,7 @@ private_fund_map/
 │   ├── 004_add_super_admin_role.sql
 │   └── 005_remove_contact_obtained.sql
 ├── logs/                       # 运行时日志
+├── upload/                     # 文件上传存储（按 reg_num 分目录）
 ├── harness/                    # Harness 流程产物
 ├── feishu_sync/                # 飞书同步插件
 │   ├── __init__.py
@@ -172,6 +173,9 @@ Streamlit (8501)       FastAPI (8100)        PostgreSQL (5432)
 | POST | `/api/plans/batch-import-simple` | 批量补录简化 | 是 |
 | GET | `/api/feedback/{plan_id}` | 获取反馈 | 是 |
 | POST | `/api/feedback` | 保存反馈 | 是 |
+| POST | `/api/feedback/upload` | 上传拜访资料文件 | 是 |
+| GET | `/api/feedback/{plan_id}/files` | 列出已上传文件 | 是 |
+| DELETE | `/api/feedback/files/{filename}` | 删除已上传文件 | 是 |
 | GET | `/api/user-tags` | 用户标签 | 是 |
 | GET | `/api/history` | 拜访历史 | 是 |
 | GET | `/api/stats` | 统计概览 | 是 |
@@ -230,3 +234,4 @@ streamlit run src/app.py --server.port 8501
 - **飞书配置**：`feishu_sync/feishu_config/config.json` 存储敏感配置，已 .gitignore
 - **Streamlit 页面**：在 `src/pages/` 下创建，复用 `st.session_state.token` 鉴权模式
 - **后端新路由**：在 `src/backend/main.py` 中添加，Pydantic 定义请求模型
+- **文件上传**：文件存放于 `upload/{reg_num}/` 目录，命名格式 `{reg_num}-{visit_date}-{原文件名}`，通过 GET `/uploads/{reg_num}/{filename}` 直接访问下载
